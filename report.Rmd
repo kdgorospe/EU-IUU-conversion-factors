@@ -1,0 +1,53 @@
+---
+title: "Background Report"
+author: "Jessica Gephart"
+date: "7/13/2020"
+output: html_document
+---
+
+## Info from contract
+
+### Background
+
+The Environmental Justice Foundation, Oceana, The Nature Conservancy, The Pew Charitable Trusts and WWF are working together in a coalition (the ‘EU IUU Coalition’) to improve global fisheries governance and transparency to end illegal, unreported and unregulated (IUU) fishing. In order to stop IUU fishing, traceability and transparency of the seafood supply chain is key. Therefore, an important goal of the EU IUU Coalition’s work is to improve traceability and verification of the legality of seafood landed or imported into the European Union (EU). 
+
+The inconsistent use of conversion factors and presentation codes for processed fish, that are used to convert fish processed weight into fish live weight for the purpose of monitoring catches, has been identified as a weakness in seafood traceability systems, where it is suspected “missing landings” go unreported, at EU and at global level. 
+
+Conversion factors set at EU level
+Commission implementing regulation (EU) No 404/2011 establishes fresh and fresh salted EU conversion factors and presentation codes that are currently being used. The implementing regulation currently applies to fishery products on board or landed or transhipped by EU fishing vessels and by third country vessels fishing in EU waters.  However, this regulation will soon be revised following the revision of the EU’s fisheries Control Regulation. This presents an opportunity for the adoption of improved factors and codes, as well as improved measures and guidelines for their use. 
+
+Conversion factors set at Member State level
+In cases where no EU or regional conversion factors exist for a given species and presentation, the conversion factor adopted by the flag Member State applies. 
+
+Conversion factors set at RFMO level
+In situations where Regional Fisheries Management Organisations (RFMOs), of which the EU is a Contracting party or cooperating non Contracting party, or regions or coastal areas where the EU has an agreement to fish in third country waters, have defined regional conversion factors, these factors apply. 
+
+Conversion factors of imports from third countries outside RFMO areas
+The EU cannot require non-EU countries to use the conversion factors set by the EU, and imports into the EU (with the exception of species with a conversion factor at RFMO level) thus use the conversion factors of the vessel’s flag country, with the result that with regards to imported seafood, conversion factors used may vary even more widely. In the EU catch certificate accompanying imported seafood there are data fields for “Estimated live weight (net fish weight in kg)”; “Estimated live weight to be landed (net fish weight in kg)”; and “Verified weight landed (net weight in kg)”; however there is no data field indicating the conversion factors used in these calculations.
+
+### Purpose
+
+The purpose of the expert contract is to assist the EU IUU Coalition in raising awareness about conversion factors, explaining in simple terms the issues that could arise in back-calculating live weight with numerous conversion factors. The issue of conversion factors is not often discussed and this factsheet would serve to try to kick-start a public debate. Depending on the issues revealed, we would use the factsheet to push the European Commission to develop, adopt and/or require the use of harmonised conversion factors to ensure that the reported live weight of fish recorded on landing declarations accurately reflects the catches made on board fishing vessels. In addition, the factsheet would serve to highlight the difficulties of inspecting imports of non-RFMO species that could arrive in EU ports without information on the conversion factor used. 
+
+### Outputs and deliverables
+
+The expert will develop and deliver to the EU IUU Coalition a short background report and a 2-3-page factsheet, informed by the report: 
+
+1.	demonstrating how inconsistencies in how the live weight of fish is calculated leads to “missing landings” of processed seafood landed in the EU, i.e. a simple case study showing the difference between EU and Member State conversion factors and how this could impact catch estimates; 
+2.	demonstrating how a lack of information on third country conversion factors (non-RFMO species) could impact the back-calculation to live weight, i.e. a simple analysis could be undertaken for one key import species, showing the different conversion factors used in three key importing states;
+3.	identifying what the strengths and/or weaknesses are in the use of terminology “Estimated live weight (net fish weight in kg)”, “Estimated live weight to be landed (net fish weight in kg)” and “Verified weight landed (net weight in kg)” as data fields on the catch certificate for seafood imports; and
+4.	providing policy recommendations on the best way to estimate weights and potentially harmonise conversion factors so they accurately reflect catches made on board fishing vessels, to the greatest extent possible.
+
+### Audience
+
+The short background report, from which the factsheet is directly derived, will serve for the EU IUU Coalition internally to respond to follow-up queries on the factsheet from the target audience.
+
+### Notes
+
+Notes for interview: <https://docs.google.com/document/d/1o2wUMDMseYWBAx70J8Kq6zYFJVtCsX-Vcl-XEuk3ZDE/edit?usp=sharing>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
