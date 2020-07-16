@@ -1,5 +1,5 @@
 # Kelvin Gorospe kdgorospe@gmail.com
-# Explore conversion factor values for Environmental Justice Fund
+# Explore conversion factor values for Environmental Justice Fund EU-IUU project
 
 
 conversion_factors <- read.csv(file.path(datadir, "seafood_conversion_factors.csv"), stringsAsFactors = FALSE)
