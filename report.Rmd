@@ -5,7 +5,7 @@ date: "7/13/2020"
 output: html_document
 ---
 
-## Info from contract
+## Info from contract [remove from report]
 
 ### Background
 
@@ -42,12 +42,57 @@ The expert will develop and deliver to the EU IUU Coalition a short background r
 
 The short background report, from which the factsheet is directly derived, will serve for the EU IUU Coalition internally to respond to follow-up queries on the factsheet from the target audience.
 
-### Notes
+### To do
 
+* 
 Notes for interview: <https://docs.google.com/document/d/1o2wUMDMseYWBAx70J8Kq6zYFJVtCsX-Vcl-XEuk3ZDE/edit?usp=sharing>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
+## Background
+
+* Problem of IUU and use of catch statistics
+* Explain general use of CFs and clarify term use in the factsheet
+* Explain specific use for EU
+* State key issues addressed in factsheet
+
+## EU Member State Conversion Factors
+
+* Commission implementing regulation (EU) No 404/2011 relating to Member States
+* Summarize the range in CFs
+
+Figure 1: Range of live weight conversion factors by species, state and presentation. Differentiation of EU-wide value, EU Member State value and non-EU Member State value
+
+### Case study 1: EU Member State example
+
+Figure 2: Catch time series comparing landed weight or live weight equivalent (depending on what data we can find) using difference CF's for EU value compared to Member State(s)
+
+## Non-EU Member State Conversion Factors
+
+* Commission implementing regulation (EU) No 404/2011 relating to non-Member States
+* Summarize the range in CFs
+
+### Case study 2: EU-non-member comparison
+
+Figure 3: Catch time series comparing landed weight or live weight equivalent (depending on what data we can find) using difference CF's for EU versus non-EU States
+
+## Trade Code Alignment with Conversion Factors
+
+Figure 4: Range in CFs by HS code (probably for select illustrative codes)
+
+## Other Considerations
+
+* Change over time
+* True variability in CFs due to differences in processing technology
+
+## Catch Statistic Terminology
+
+* Use on EU forms
+* Comparison to FAO terminology
+
+## Recommendations for Harmonizing Catch Statistics
 
 
