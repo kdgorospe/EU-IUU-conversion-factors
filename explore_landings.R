@@ -28,6 +28,7 @@ library(tidyverse)
 
 landingsdir <- file.path("Data", "Eurostat Landings")
 
+# CHOOSE COUNTRY HERE
 eu_country <- "bg"
 landings_file <- paste("fish_ld_", eu_country, ".tsv", sep = "")
 landings_dat <- read_tsv(file.path(landingsdir, landings_file))
@@ -40,7 +41,7 @@ landings_dat_clean <- landings_dat %>%
   separate(col = names(landings_dat)[1], into = c("species", "pres", "dest_use", "unit", "natvessr", "geo"), sep = ",") 
 
   
-codesdir <- file.path("Data", "Codes")
+codesdir <- file.path("Data", "Eurostat Landings", "Codes")
 code_files <- file.path(codesdir, list.files(codesdir))
 
 # Vectorized read-in of files
@@ -89,16 +90,14 @@ landings_dat_coded <- as.data.frame(landings_dat_clean) %>%
   mutate(pres = recode(pres, !!!code_key_vec$pres)) %>%
   mutate(species = recode(species, !!!code_key_vec$species)) %>%
   mutate(unit = recode(unit, !!!code_key_vec$unit)) %>%
-  separate(col = species, into = c("common_name", "scientific_name"), sep = " - ", fill = "right") %>% # fill = right; i.e., if scientific name is missing, fill column on the right with NA
+  separate(col = species, into = c("common_name", "scientific_name"), sep = " - ", fill = "right") %>% 
+  # fill = right; i.e., if only common name is given, fill column on the right (scientific name) with NA
   rename(presentation = pres,
          use = dest_use,
          nationality_of_vessel = natvessr,
-         reporting_entity = geo)
+         reporting_entity = geo) # Rename column names
 
  
-
-
-# Replace with meaningful column names: "species", "presentation", "use", "unit", "nationality_of_vessel", "reporting_entity"
 
 
                            
