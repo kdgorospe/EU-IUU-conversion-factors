@@ -44,7 +44,15 @@ The short background report, from which the factsheet is directly derived, will 
 
 ### To do
 
-* 
+* Draft report due August 31, 2020
+* Week of August 24: Draft review between JG and KG
+* Week of August 17: Tentatively scheduled update with EJF team, have draft figures ready to present
+* Output 1: Summary of variation in CF values for a given species - presentation - preservation combo across different member and non-member states and EU-wide
+* Output 2: Identify a case-study where there is large CF-variation. Use EUROSTAT landings data to show range of live weight equivalent over time using different CF values
+* Week of August 3: Work on harmonization recommendations (JG); Create figures for case studies (KG)
+* Week of July 27: Select case studies, work on terminology recommendations
+* Week of July 20: All data entered (Have CF values entered into spreadsheet)
+
 Notes for interview: <https://docs.google.com/document/d/1o2wUMDMseYWBAx70J8Kq6zYFJVtCsX-Vcl-XEuk3ZDE/edit?usp=sharing>
 
 ```{r setup, include=FALSE}
@@ -68,7 +76,7 @@ Figure 1: Range of live weight conversion factors by species, state and presenta
 
 ### Case study 1: EU Member State example
 
-Figure 2: Catch time series comparing landed weight or live weight equivalent (depending on what data we can find) using difference CF's for EU value compared to Member State(s)
+Figure 2: Use landed weight data to show variation in calculated live weight using different CF's for EU value compared to Member State(s)
 
 ## Non-EU Member State Conversion Factors
 
@@ -77,7 +85,7 @@ Figure 2: Catch time series comparing landed weight or live weight equivalent (d
 
 ### Case study 2: EU-non-member comparison
 
-Figure 3: Catch time series comparing landed weight or live weight equivalent (depending on what data we can find) using difference CF's for EU versus non-EU States
+Figure 3: Use landed weight data to show variation in calculated live weight using different CF's for member and non-member States
 
 ## Trade Code Alignment with Conversion Factors
 
@@ -95,4 +103,7 @@ Figure 4: Range in CFs by HS code (probably for select illustrative codes)
 
 ## Recommendations for Harmonizing Catch Statistics
 
-
+* For data reproducibility:
+* Landings certificate should collect CF values
+* CF values applied to back-calculate live weight should be reported with the catch data (currently unable to back-calculate CF values from historical catch and landings because fish are landed in multiple presentations which can't be paired back to total catch which does not record original landed presentations)
+* Alternatively, catch data should report original landed presentation, and from this one could back-calculate the applied CF value

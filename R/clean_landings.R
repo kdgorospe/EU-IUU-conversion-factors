@@ -13,6 +13,7 @@ clean_landings <- function(eu_country){
   landings_file <- paste("fish_ld_", eu_country, ".tsv", sep = "")
   landings_dat <- read_tsv(file.path(landingsdir, landings_file))
   
+  # FIX IT - replace NAs for "u" or "b" and move all data flags to separate column for quick reference
   # FIX IT - Ignore data flags for now
   landings_dat_clean <- landings_dat %>%
     #mutate_all(function(x) gsub(pattern = " e| c| d| p", replacement = "", x)) %>% # Remove data flags
