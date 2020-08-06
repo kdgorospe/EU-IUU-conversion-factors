@@ -5,6 +5,11 @@ date: "7/13/2020"
 output: html_document
 ---
 
+## Notes
+
+* Looks like Anna finished entering the data. I asked her to go back through to check, but we can move forward and just update the data sheet
+* 
+
 ## Info from contract [remove from report]
 
 ### Background
@@ -62,10 +67,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Background
 
-* Problem of IUU and use of catch statistics
-* Explain general use of CFs and clarify term use in the factsheet
-* Explain specific use for EU
+* General problem of IUU (define, describe magnitude, pathways and importance of traceability)
+
+
+* Use of catch statistics for IUU
+
+
+* Define terms and point to issue of CFs
+
+Following the FAO Coordinating Party on Fishery Statistics, within this report, the landed weight refers to the weight of product at the time of landing, regardless of the state (e.g., fresh or frozen) and presentation (e.g., whole, gutted, filleted, etc.), the product weight refers to the weight of a product at the time of weighing, and the nominal catch refers to the landings converted to a live weight basis (Ref: ,http://www.fao.org/cwp-on-fishery-statistics/handbook/capture-fisheries-statistics/catch-and-landings/en/>). Since fishery products can be landed in diverse states and presentations, which dramatically alter the weight, catch statistics are reported as nominal weight in international statistics. In order to convert from landed weight to nominal weight, a live weight conversion factor must be applied. The conversion to nominal weight enables better catch comparison across space and time since it incorporates differences in state and presentation. At the same time, the application of live weight conversion factors can introduce error when the factors do not accurately represent processing losses. Additionally, nominal catch only represents the live weight equivalent of the fishery products landed and therefore cannot be used to directly evaluate the gross catch, which includes not only the retained catch, but also the discarded catch. 
+
+* EU catch certificate program
+
+
 * State key issues addressed in factsheet
+
+## EU Catch Certificate
+
+Commission implementing regulation (EU) No 404/2011
 
 ## EU Member State Conversion Factors
 
@@ -98,8 +117,31 @@ Figure 4: Range in CFs by HS code (probably for select illustrative codes)
 
 ## Catch Statistic Terminology
 
-* Use on EU forms
-* Comparison to FAO terminology
+Eurostat, the statistical office of the European Union, houses the catch data within the Agriculture and fisheries division. Eurostat is a member organization of the Coordinating Working Party on Fishery Statistics (CWP) and therefore has adopted the CWP catch statistic concepts and definitions. Therefore, here we compare the terminoligy on the EU catch certificate to the CWP terminology. 
+
+As described above, catch statistics are reported as the live weight equivalent, which differs from... The CWP defines are nominal catch, landed weight, product weight, and discards. 
+
+The European Union Catch Certificate includes fields for reporting catch, transhipment, and import weight: 
+
+* Catch - Estimated live weight (net fish weight in kg) (Fig _)
+* Catch - Estimated live weight to be landed (net fish weight in kg) (Fig _)
+* Catch - Verified Weight Landed (net weight in kg) (Fig _)
+* Transhipment - Estimated weight (kg) (Fig _)
+* Import - Net weight in kg (Fig _)
+* Import - Net fish weight in kg (Fig _)
+
+Within the CWP, net weight refers to the landed weight, not the nominal catch. The EU catch certificate fields "Estimated live weight" and "Estimated live weight to be landed" include estimated live weight (nominal catch) in the main field name, but specify "net fish weight in kg" in the parentheses. 
+
+FIXIT: Check that these forms are the correct forms corresponding to the Commission implementing regulation (EU) No 404/2011
+
+![Annex II European Union Catch Certificate and Re-Export Certificate Catch Weight Fields](Images/Annex II EU Catch Certificate Catch Fields.png)
+Figure _: Annex II European Union Catch Certificate and Re-Export Certificate catch weight fields
+
+![Annex II European Union Catch Certificate and Re-Export Certificate Transhipment Weight Fields](Images/Annex II EU Catch Certificate Transhipment Fields.png)
+Figure _: Annex II European Union Catch Certificate and Re-Export Certificate transhipment weight fields
+
+![Annex II European Union Catch Certificate and Re-Export Certificate Trade Weight Fields](Images/Annex II EU Catch Certificate Trade Fields.png)
+Figure _: Annex II European Union Catch Certificate and Re-Export Certificate trade weight fields
 
 ## Recommendations for Harmonizing Catch Statistics
 
