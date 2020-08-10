@@ -4,45 +4,112 @@
 rm(list=ls())
 library(tidyverse)
 library(rfishbase)
+
+# Data folders:
 datadir <- "/Volumes/jgephart/ARTIS/Data"
 artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
-eu_iuu_outputs <- "Outputs"
-EU_cf <- read.csv(file.path(datadir, "EU_nation_CF_2020-08-07.csv"))
+
+# Output folder:
+outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+
+############################################################################################################
+# Clean EU Commission's seafood conversion factors data, Table 1 from here: https://ec.europa.eu/fisheries/cfp/control/conversion_factors_en
+EU_cf <- read.csv(file.path(datadir, "EU_nation_CF_2020-08-10.csv"))
+
+EU_cf_clean <- EU_cf %>%
+  rename(conversion_factor = factor) %>%
+  # Translate states and presentations based on Table 4
+  mutate(state = case_when(state == "ALI" ~ "alive",
+                           state == "FRE" ~ "fresh",
+                           state == "FRO" ~ "frozen",
+                           state == "SAL" ~ "salted",
+                           TRUE ~ "none"),
+         presentation = case_when (presentation == "CBF" ~ "cod butterfly",
+                                   presentation == "CLA" ~ "claws",
+                                   presentation == "DWT" ~ "gilled, gutted, part of head off, fins off",
+                                   presentation == "FIL" ~ "filleted", # note from Table 4: fillet = head off, gutted, tail off, bones off, skin on
+                                   presentation == "FIS" ~ "filleted, skinned",
+                                   presentation == "FSB" ~ "filleted, with skin and bones on",
+                                   presentation == "FSP" ~ "filleted, skinned, with pinbone on",
+                                   presentation == "GHT" ~ "gutted, head off, tail off",
+                                   presentation == "GTA" ~ "gutted, tail off", 
+                                   presentation == "GTF" ~ "gutted, tail off, finned",
+                                   presentation == "GUG" ~ "gutted, gilled",
+                                   presentation == "GUH" ~ "gutted, head off",
+                                   presentation == "GUS" ~ "gutted, head off, skinned",
+                                   presentation == "GUT" ~ "gutted",
+                                   presentation == "HEA" ~ "head off",
+                                   presentation == "HET" ~ "head off, tail off",
+                                   presentation == "JAP" ~ "Japanese cut",
+                                   presentation == "JAT" ~ "Japanese cut, tail off",
+                                   presentation == "LAP" ~ "Lappen",
+                                   presentation == "SAD" ~ "salted dry",
+                                   presentation == "SAL" ~ "salted wet light",
+                                   presentation == "SGH" ~ "salted, gutted, head off",
+                                   presentation == "SGT" ~ "salted, gutted",
+                                   presentation == "SUR" ~ "surimi",
+                                   presentation == "TAL" ~ "tail only (squid)",
+                                   presentation == "TLD" ~ "tail off",
+                                   presentation == "TUB" ~ "tube only (squid)",
+                                   presentation == "WHL" ~ "whole",
+                                   presentation == "WNG" ~ "wings only",
+                                   presentation == "WNG+SKI" ~ "wings only, skinned",
+                                   TRUE ~ "none"))
+  
 
 ############################################################################################################
 # Clean ARTIS seafood conversion factors data
 # note: the following is the same cleaning process used in ARTIS
 conversion_factors <- read.csv(file.path(datadir, "seafood_conversion_factors.csv"))
-hs_hs_match <- read.csv(file.path(artis_outputs, "hs_hs_match_verHS17_2020-07-08.csv"))
-# Prepare hs_for_cf_matching (this is just brute-force copying from ARTIS code - only need this to check sci-names)
-hs_for_cf_matching <- hs_hs_match %>%
-  select(Code_pre, Description_pre, Taxa_pre, Sep_pre, Prep_pre) %>%
-  rename(Code = Code_pre, Description = Description_pre, Taxa = Taxa_pre, Separation = Sep_pre, Preparation = Prep_pre) %>%
-  # Need to flatten hs_for_cf_matching$Taxa, one row for each taxon
-  separate_rows(Taxa, sep = ", ", ) %>%
-  unique() %>% # not sure why so many duplicate rows are being created 
-  # create Separation category for caviar (was not part of the original hs_hs_match)
-  mutate(Separation = case_when(str_detect(Code, "^16043") ~ "caviar",
-                                TRUE ~ Separation))
 
+# Limit scope of previously compiled conversion_factors data:
 cf_data <- conversion_factors %>%
-  filter(Conversion.factor>=1) %>%
-  filter(Type != "Aquatic plants")
+  #filter(Conversion.factor>=1) %>%
+  filter(Type != "Aquatic plants") %>%
+  filter(is.na(Country)==FALSE) %>%
+  filter(Country != "") %>%
+  filter(is.na(Species)==FALSE) %>%
+  filter(Species != "") %>%
+  filter(Conversion.factor != "") %>%
+  filter(is.na(Conversion.factor)==FALSE) %>%
+  # Rename to match EU_cf data
+  rename(type = Type,
+         type_of_processing = Type.of.Processing,
+         reference = REF,
+         conversion_factor = Conversion.factor,
+         note = Note,
+         country = Country,
+         scientific_name = Species) %>%
+  mutate(type_of_processing = tolower(type_of_processing)) %>%
+  select(country, scientific_name, type_of_processing, conversion_factor, note, reference)
+  
+# Get unique list of type_of_processing and output - use this to figure out how to align these descriptions with EU_cf_data presentation
+unique_processing <- unique(cf_data$type_of_processing) %>% 
+  str_remove_all(., pattern = ",")
 
-# Rename type column to match transformation code:
-colnames(cf_data)[1] <- "type"
-colnames(cf_data)[5] <- "type_of_processing"
-cf_data$type <- as.character(cf_data$type)
-cf_data$type_of_processing <- tolower(as.character(cf_data$type_of_processing))
+write.csv(unique_processing, file = file.path(outdir, "type_of_processing_list.csv"), quote = FALSE, row.names = FALSE)
 
-# CORRECT SPELLING MISTAKES
+# Manually add in Euro Commission codes to type_of_processing_list.csv:
+# Ignore type_of_processing that are not part of EU_cf states (only consider alive, fresh, frozen)
+# Ignore anything salted - too ambiguous to translate to EU_cf codes
+
+align_to_eu <- read.csv(file.path(outdir, "type_of_processing_list_with_EU_codes.csv"))
+align_to_eu_clean <- align_to_eu %>%
+  filter(presentation != "")
+
 cf_data_clean <- cf_data %>%
-  mutate(type_of_processing = case_when(str_detect(type_of_processing, "guttted") ~ "gutted",
-                                        type_of_processing == "fillets, skinless" & type == "Molluscs" ~ "unknown",
-                                        TRUE ~ type_of_processing))
+  # CREATE NEW COLUMN "state" to align with EU categories
+  mutate(state = case_when(str_detect(type_of_processing, "\\blive\\b|alive") ~ "alive", # this uses word boundaries (\\b) to match "live" or "alive" but not liver
+                           str_detect(type_of_processing, "fresh") ~ "fresh",
+                           str_detect(type_of_processing, "frozen") ~ "frozen",
+                           str_detect(type_of_processing, "salted") ~ "salted",
+                           TRUE ~ "none")) %>%
+  # CREATE NEW COLUMN "presentation" by merging with align_to_eu_clean
+  mutate(type_of_processing = str_remove_all(type_of_processing, pattern = ",")) %>%
+  left_join(align_to_eu_clean, by = "type_of_processing") %>%
+  filter(state != "none" & is.na(presentation)==FALSE)
 
-# FIX IT: need to convert type_of_processing to EU presentation and state codes
-# FIX IT - standardize scientific names with rfishbase?
+# LEFT OFF HERE: next - standardize scientific namess in BOTH EU_cf_clean and cf_data_clean with rfishbase
 
 ############################################################################################################
 # end: Clean ARTIS seafood conversion factors data
