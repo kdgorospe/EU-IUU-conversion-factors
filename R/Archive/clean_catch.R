@@ -1,9 +1,11 @@
 # Kelvin Gorospe kdgorospe@gmail.com
-# Explore conversion factor values for Environmental Justice Fund EU-IUU project
+# Provide recommendations Re: conversion factor values for Environmental Justice Fund EU-IUU project
 
 #####################################################################################################
 # CLEAN CATCH DATA:
-# FIX IT - turn into a function
+# Note: probably won't be focusing on catch data for analysis; instead focus on landings data and back-calculate catch
+# Why? originally was going to use landings and catch data to backcalculate the CF value that was applied, but can't do this since the catch data does not indicate what state + presentation it was landed
+# i.e., can't pair landings and catch data unless state + presentation is also provided for the catch data
 
 clean_catch <- function(fishing_area){
   

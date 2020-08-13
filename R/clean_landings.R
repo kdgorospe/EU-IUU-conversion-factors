@@ -1,20 +1,19 @@
 # Kelvin Gorospe kdgorospe@gmail.com
-# Explore conversion factor values for Environmental Justice Fund EU-IUU project
+# Provide recommendations Re: conversion factor values for Environmental Justice Fund EU-IUU project
 
 #####################################################################################################
-# CLEAN LANDINGS DATA:
+# FUNCTION FOR CLEANING LANDINGS DATA:
+# FIX IT - data flags: replace NAs for "u" or "b" and move all data flags to separate column for quick reference (may want to have these displayed/flagged in plots)
 
-# Load function
 clean_landings <- function(eu_country){
 
+  # NOTE: OK to keep Landings and Catch data in GitHub repo since these are publicly available data
   landingsdir <- file.path("Data", "Eurostat Landings")
   
   # CHOOSE COUNTRY HERE
   landings_file <- paste("fish_ld_", eu_country, ".tsv", sep = "")
   landings_dat <- read_tsv(file.path(landingsdir, landings_file))
   
-  # FIX IT - replace NAs for "u" or "b" and move all data flags to separate column for quick reference
-  # FIX IT - Ignore data flags for now
   landings_dat_clean <- landings_dat %>%
     #mutate_all(function(x) gsub(pattern = " e| c| d| p", replacement = "", x)) %>% # Remove data flags
     mutate_all(function(x) gsub(pattern = " [[:alpha:]]+", replacement = "", x)) %>% # Remove data flags, including all possible combinations of data flags (e.g., " ep"); [[:alpha:]] matches strings of one or MORE characters

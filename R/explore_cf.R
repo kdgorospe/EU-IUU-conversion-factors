@@ -1,6 +1,8 @@
 # Kelvin Gorospe kdgorospe@gmail.com
-# Explore conversion factor values for Environmental Justice Fund EU-IUU project
+# Provide recommendations Re: conversion factor values for Environmental Justice Fund EU-IUU project
 
+
+# Produce preliminary figures for grant proposal:
 
 conversion_factors <- read.csv(file.path(datadir, "seafood_conversion_factors.csv"), stringsAsFactors = FALSE)
 eumofa_data <- read.csv(file.path(datadir, "EUMOFA_compiled.csv"), stringsAsFactors = FALSE)

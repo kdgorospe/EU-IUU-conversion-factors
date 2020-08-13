@@ -1,5 +1,5 @@
 # Kelvin Gorospe kdgorospe@gmail.com
-# Explore conversion factor values for Environmental Justice Fund EU-IUU project
+# Provide recommendations Re: conversion factor values for Environmental Justice Fund EU-IUU project
 
 #####################################################################################################
 # Compare country-specific landings data to "main" eurostat landings data
