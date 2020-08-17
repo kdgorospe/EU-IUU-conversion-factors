@@ -7,7 +7,6 @@ output: html_document
 
 ## Notes
 
-* Looks like Anna finished entering the data. I asked her to go back through to check, but we can move forward and just update the data sheet
 * 
 
 ## Info from contract [remove from report]
@@ -75,12 +74,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 * Define terms and point to issue of CFs
 
-Following the FAO Coordinating Party on Fishery Statistics, within this report, the landed weight refers to the weight of product at the time of landing, regardless of the state (e.g., fresh or frozen) and presentation (e.g., whole, gutted, filleted, etc.), the product weight refers to the weight of a product at the time of weighing, and the nominal catch refers to the landings converted to a live weight basis (Ref: ,http://www.fao.org/cwp-on-fishery-statistics/handbook/capture-fisheries-statistics/catch-and-landings/en/>). Since fishery products can be landed in diverse states and presentations, which dramatically alter the weight, catch statistics are reported as nominal weight in international statistics. In order to convert from landed weight to nominal weight, a live weight conversion factor must be applied. The conversion to nominal weight enables better catch comparison across space and time since it incorporates differences in state and presentation. At the same time, the application of live weight conversion factors can introduce error when the factors do not accurately represent processing losses. Additionally, nominal catch only represents the live weight equivalent of the fishery products landed and therefore cannot be used to directly evaluate the gross catch, which includes not only the retained catch, but also the discarded catch. 
+Following the FAO Coordinating Party on Fishery Statistics, within this report, the landed weight refers to the weight of product at the time of landing, regardless of the state (e.g., fresh or frozen) and presentation (e.g., whole, gutted, filleted, etc.), the product weight refers to the weight of a product at the time of weighing, and the nominal catch refers to the landings converted to a live weight basis (Ref: <http://www.fao.org/cwp-on-fishery-statistics/handbook/capture-fisheries-statistics/catch-and-landings/en/>). Since fishery products can be landed in diverse states and presentations, which dramatically alter the weight, catch statistics are reported as nominal weight in international statistics. In order to convert from landed weight to nominal weight, a live weight conversion factor must be applied. The conversion to nominal weight enables better catch comparison across space and time since it incorporates differences in state and presentation. At the same time, the application of live weight conversion factors can introduce error when the factors do not accurately represent processing losses. Additionally, nominal catch only represents the live weight equivalent of the fishery products landed and therefore cannot be used to directly evaluate the gross catch, which includes not only the retained catch, but also the discarded catch. 
 
 * EU catch certificate program
 
 
 * State key issues addressed in factsheet
+
 
 ## EU Catch Certificate
 
@@ -132,6 +132,8 @@ The European Union Catch Certificate includes fields for reporting catch, transh
 
 Within the CWP, net weight refers to the landed weight, not the nominal catch. The EU catch certificate fields "Estimated live weight" and "Estimated live weight to be landed" include estimated live weight (nominal catch) in the main field name, but specify "net fish weight in kg" in the parentheses. 
 
+Check if estimated live weigh includes discards
+
 FIXIT: Check that these forms are the correct forms corresponding to the Commission implementing regulation (EU) No 404/2011
 
 ![Annex II European Union Catch Certificate and Re-Export Certificate Catch Weight Fields](Images/Annex II EU Catch Certificate Catch Fields.png)
@@ -149,3 +151,5 @@ Figure _: Annex II European Union Catch Certificate and Re-Export Certificate tr
 * Landings certificate should collect CF values
 * CF values applied to back-calculate live weight should be reported with the catch data (currently unable to back-calculate CF values from historical catch and landings because fish are landed in multiple presentations which can't be paired back to total catch which does not record original landed presentations)
 * Alternatively, catch data should report original landed presentation, and from this one could back-calculate the applied CF value
+* Need for EU-wide CF for all species/presentations -- there are cases where a country says to use the EU wide value for a species, but the EU does not provide a value for all states/presentations
+* Need better definitions for the states and presentations. Not fully hierarchical, salted appears as a state and a presentation, and some states (e.g., cooked) don't appear on the code list at all
