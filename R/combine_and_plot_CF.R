@@ -9,19 +9,20 @@ rm(list=ls())
 library(tidyverse)
 library(rfishbase)
 library(countrycode)
+library(data.table) # rbindlist
 
 # MacOS:
 # Data folders:
-#datadir <- "/Volumes/jgephart/ARTIS/Data"
-#artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
+datadir <- "/Volumes/jgephart/ARTIS/Data"
+artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
-#outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+outdir <- "/Volumes/jgephart/EU IUU/Outputs"
 
 # Windows:
-datadir <- "K:/ARTIS/Data"
-artis_outputs <- "K:/ARTIS/Outputs"
+#datadir <- "K:/ARTIS/Data"
+#artis_outputs <- "K:/ARTIS/Outputs"
 # Output folder:
-outdir <- "K:/EU IUU/Outputs"
+#outdir <- "K:/EU IUU/Outputs"
 ############################################################################################################
 # Step 1 - clean and output merged data
 # Recode states and presentations 
@@ -119,7 +120,11 @@ cf_data_clean <- cf_data %>%
   # CREATE NEW COLUMN "presentation" by merging with align_to_eu_clean
   mutate(type_of_processing = str_remove_all(type_of_processing, pattern = ",")) %>%
   left_join(align_to_eu_clean, by = "type_of_processing") %>%
+  # LEFT_JOIN creates duplicates (since we're only joining by presentation and not state - e.g., multiple entries for GUH, GHT, etc)
+  unique() %>%
   filter(state != "none" & is.na(presentation)==FALSE) %>%
+  # REMOVE EUMOFA VALUES (not part of the scope of this study)
+  filter(reference != "EUMOFA Appendix 7") %>%
   select(country, scientific_name, state, presentation, conversion_factor, note, reference) %>%
   # NOTE: presentation translations copied from above
   mutate(presentation = case_when (presentation == "CBF" ~ "cod butterfly", # no landings code for this
@@ -201,7 +206,7 @@ cf_data_countries <- cf_data_scinames %>%
 # Before adding iso3c to EU data, simplify data by removing rows with note = "see list of CCF" - i.e., this means the country uses the EU-wide CF value for this species/state/presentation
 # FIX IT - if desired, can also add ICCAT website CF values
 EU_cf_countries <- EU_cf_scinames %>%
-  filter(note != "see list of CCF") %>%
+  filter(note %in% c("see list of CCF", "see ICCAT website")==FALSE) %>%
   filter(country != "") %>%
   mutate(iso3c = countrycode(country, origin = "country.name", destination = "iso3c"),
          iso2c = countrycode(country, origin = "country.name", destination = "iso2c"))
@@ -213,12 +218,14 @@ cf_data_full <- cf_data_countries %>%
   # deal with spp. vs spp 
   mutate(scientific_name = str_to_sentence(scientific_name)) %>%
   mutate(scientific_name = str_remove(scientific_name, pattern = "\\.")) %>% # standardize spp. vs spp by removing "."
-  mutate(landings_code = paste(state, presentation, sep = ", ")) 
+  mutate(landings_code = paste(state, presentation, sep = ", ")) %>%
+  arrange(scientific_name, state, presentation, conversion_factor, country) %>%
+  select(scientific_name, state, presentation, landings_code, conversion_factor, country, iso3c, iso2c, note, reference)
 
 cf_data_no_commas <- cf_data_full %>%
   mutate_all(~str_remove_all(., pattern = ",")) 
 
-write.csv(cf_data_no_commas, file.path(outdir, paste("compiled_cf_values_for_EU_IUU_", Sys.Date(), ".csv", sep = "")), quote = FALSE, row.names = FALSE)
+write.csv(cf_data_no_commas, file.path(outdir, paste("compiled_cf_values_for_EU_IUU.csv", sep = "")), quote = FALSE, row.names = FALSE)
 
 ############################################################################################################
 # Step 2: Summarize
@@ -243,7 +250,7 @@ cf_data_summary <- cf_data_full %>%
 cf_summary_no_commas <- cf_data_summary %>%
   mutate_all(~str_remove_all(., pattern = ",")) 
 
-write.csv(cf_summary_no_commas, file.path(outdir, paste("summary_cf_values_for_EU_IUU_", Sys.Date(), ".csv", sep = "")), quote = FALSE, row.names = FALSE)
+write.csv(cf_summary_no_commas, file.path(outdir, paste("summary_cf_values_for_EU_IUU.csv", sep = "")), quote = FALSE, row.names = FALSE)
   
 ############################################################################################################
 # Step 3: Plot CF values
@@ -305,22 +312,27 @@ ggsave(file.path(outdir, "case_studies_cf_values.png")) # PRINT to console and r
 source("R/clean_landings.R")
 
 # NOTE: very limited in what we can back calculate from landings data because the CF state+presentation codes do not perfectly match/align with landings codes (see notes in code above for EU_cf_clean)
-levels(landings_dat_list$es$presentation)
+landings_main <- clean_landings("main")
+unique(landings_main$presentation)
 unique(cf_case_data$landings_code)
 
-# Return to cf_data_full (i.e., not just the top 20) to search for CF presentations (e.g., Fresh gutted) that are ALSO present in landings data
-possible_presentations <- unique(cf_data_full$landings_code)[unique(cf_data_full$landings_code) %in% levels(landings_dat_list$es$presentation)] # levels gives all 43 possible presentations so it doesn't matter that I'm using "es" Spain here
+# Only need landings_main for full list of presentations
+rm(landings_main)
 
+# Return to cf_data_full (i.e., not just the top 20) to search for CF presentations (e.g., Fresh gutted) that are ALSO present in landings data
+possible_presentations <- unique(cf_data_full$landings_code)[unique(cf_data_full$landings_code) %in% unique(landings_main$presentation)] # levels gives all 43 possible presentations so it doesn't matter that I'm using "es" Spain here
 
 cf_data_possible <- cf_data_full %>%
   filter(landings_code %in% possible_presentations) %>%
   mutate(eu = if_else(iso3c %in% eu_codes, true = "EU", false = "non-EU")) %>%
+  mutate(eu_wide_available = if_else(iso3c == "EU", true = "yes", false = "no")) %>%
   group_by(scientific_name, state, presentation, landings_code) %>%
   summarise(n_CF = n(),
             n_EU = sum(eu == "EU"),
             max_CF = max(conversion_factor),
             min_CF = min(conversion_factor),
-            range = max(conversion_factor) - min(conversion_factor)) %>% 
+            range = max(conversion_factor) - min(conversion_factor),
+            eu_wide_available = sum(eu_wide_available == "yes")) %>% 
   filter(n_CF > 1) %>% # filter out cases where there's only 1 CF value
   filter(n_EU > 0) %>% # filter out cases where there are no EU countries
   filter(range != 0) %>% # filter out cases with not variation in CF values
@@ -343,16 +355,6 @@ cf_case_data_2 <- cf_data_full %>%
   mutate(x_labels = as.factor(x_labels)) %>%
   # order case studies data from largest to smallest range in cf values (use match function to get index from cf_case_studies$match_combo)
   arrange(match(match_combo, cf_possible_cases$match_combo))
-
-group.colors <- c("royalblue1", "tan1")
-group.shapes <- c(17, 20)
-
-# shapes:
-# 8 = asterisk
-# 1 = open circle
-# 16 = filled circle
-# 17 = filled triangle
-# 20 = smaller filled circle
 
 x_labels_as_numeric <- which(levels(cf_case_data_2$x_labels) %in% cf_case_data_2$x_labels)
 
@@ -378,57 +380,183 @@ print(p)
 ggsave(file.path(outdir, "case_studies_cf_values_for_landings_presentations.png"))
 
 ############################################################################################################
-# Step 4: Limit study to cases that have EU values?
+# Step 5: Plot CF (national) values that match landings presentations AND also have a corresponding EU-wide value
 
-# Salmo trutta (Fresh, filleted)
-# Salmo salar (Fresh, filleted)
-# Pollachius virens (Fresh, filleted)
-# Lophiidae (Frozen, gutted and headed)
-# Gadus morhua (Fresh, filleted)
+cf_data_eu_annex <- cf_data_possible %>% 
+  filter(eu_wide_available == 1) %>%
+  slice_head(n=20) %>%
+  mutate(match_combo = paste(state, presentation, scientific_name, sep = ", "))
 
-landings_case_studies <- c("Salmo trutta (Fresh, filleted)", 
-                           "Salmo salar (Fresh, filleted)",
-                           "Pollachius virens (Fresh, filleted)",
-                           "Lophiidae (Frozen, gutted and headed)",
-                           "Gadus morhua (Fresh, filleted)")
+cf_case_data_3 <- cf_data_full %>%
+  mutate(match_combo = paste(state, presentation, scientific_name, sep = ", ")) %>%
+  filter(match_combo %in% cf_data_eu_annex$match_combo) %>%
+  mutate(affiliation = case_when(iso3c %in% eu_codes ~ "EU",
+                                 iso3c == "EU" ~ "EU",
+                                 TRUE ~ "non-EU")) %>%
+  mutate(implementation = case_when(iso3c == "EU" ~ "EU-wide CF",
+                                    TRUE ~ "national CF")) %>%
+  mutate(x_labels = paste(scientific_name, " (", paste(state, presentation, sep = ", "), ")", sep = "")) %>%
+  mutate(x_labels = as.factor(x_labels)) %>%
+  # order case studies data from largest to smallest range in cf values (use match function to get index from cf_case_studies$match_combo)
+  arrange(match(match_combo, cf_data_eu_annex$match_combo))
 
-cf_cases_iso2c <- cf_case_data_2 %>% 
-  filter(x_labels %in% landings_case_studies) %>%
+x_labels_as_numeric <- which(levels(cf_case_data_3$x_labels) %in% cf_case_data_3$x_labels)
+
+p <- ggplot(data = cf_case_data_3, mapping = aes(x = x_labels, y = conversion_factor)) +
+  geom_point(aes(color = affiliation, shape = implementation), size = 2.5) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) +
+  coord_flip() 
+
+print(p)
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png"))
+
+############################################################################################################
+# Step 4: Use cf_case_data_3 (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
+
+#landings_case_studies <- unique(cf_case_data_3$x_labels)
+
+cf_cases_iso2c <- cf_case_data_3 %>% 
   mutate(iso2c = str_to_lower(iso2c)) %>%
   pull(iso2c) %>%
-  unique() 
-  
+  unique() %>%
+  sort()
 
+cf_cases_sciname <- cf_case_data_3 %>% 
+  pull(scientific_name) %>%
+  unique() 
+
+cf_cases <- cf_case_data_3 %>% 
+  pull(x_labels) %>%
+  unique() 
+
+# Note: although there is a "main" landings dataset this only reports TOTALS, need to go to each individual country's landings data in order to get nationality of vessels
+# Also, since landings data is organized by the reporting country (not the nationality of vessel, which is found within each reporting country's dataset), need to create master data frame of ALL landings data first, before filtering by nationality of vessel
 landings_files <- list.files("Data/Eurostat Landings")[grep("tsv", list.files("Data/Eurostat Landings"))]
 no_extension <- unlist(lapply(landings_files, strsplit, "\\."))[grep("fish", unlist(lapply(landings_files, strsplit, "\\.")))]
 iso2_landings <- unlist(lapply(no_extension, strsplit, "_"))[!grepl("fish|ld", unlist(lapply(no_extension, strsplit, "_")))]
+iso2_landings <- iso2_landings[!grepl("main", iso2_landings)]
+#cases_with_landings <- sort(cf_cases_iso2c[cf_cases_iso2c %in% iso2_landings])
 
-cases_with_landings <- sort(cf_cases_iso2c[cf_cases_iso2c %in% iso2_landings])
+landings_dat_list <- lapply(iso2_landings, function(i){clean_landings(eu_country = i)})
+names(landings_dat_list) <- iso2_landings
 
-landings_dat_list <- lapply(cases_with_landings, function(i){clean_landings(eu_country = i)})
-names(landings_dat_list) <- cases_with_landings
+# FIX IT: check "ee", "lt", "pl" why does they have print different console outputs during "lapply" - e.g., "`2018` = col_character() 
 
-# Compare with data passed to function without lapply:
-landings_de <- clean_landings("de")
-landings_is <- clean_landings("is")
-landings_no <- clean_landings("no")
-landings_se <- clean_landings("se")
+# "PIVOT" EU CF values into its own column
+eu_wide_cf <- cf_case_data_3 %>%
+  filter(country == "EU") %>%
+  select(conversion_factor, x_labels) %>%
+  rename(EU_CF = conversion_factor)
 
-# LEFT OFF HERE: need to automate this search process
-# Landings data that match both species and presentation of first case study
-landings_case_es <- landings_dat_list$es %>%
-  filter(scientific_name == "Sebastes spp" & presentation == "Fresh, filleted") %>%
+# rbind landings_dat_list into a single dataset
+landings_dat <- rbindlist(landings_dat_list)
+
+# retain only species + presentations in cf_cases
+landings_cases_tonnes <- landings_dat %>%
+  filter(is.na(value)==FALSE) %>%
+  mutate(x_labels = paste(scientific_name, " (", presentation, ")", sep = "")) %>%
+  filter(x_labels %in% cf_cases) %>%
+  mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c"),
+         iso2c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso2c")) %>%
+  # Change iso2c for United Kingdom (GB) to UK, which is what they use in the landings datafile labels
+  mutate(iso2c = if_else(iso2c == "GB", true = "UK", false = iso2c)) %>%
+  # Remove non-countries, no iso3c e.g., "European union", "European Free Trade Association"
+  filter(is.na(iso3c)==FALSE) %>%
   filter(unit == "Tonnes product weight") %>%
-  filter(is.na(value)==FALSE)
+  # Other uses include: Human consumption, etc.
+  filter(use == "Total") %>%
+  select(x_labels, common_name, nationality_of_vessel, iso3c, iso2c, value, year, reporting_entity)
 
-landings_case_fr <- landings_dat_list$fr %>%
-  filter(scientific_name == "Sebastes spp" & presentation == "Fresh, filleted") %>%
-  filter(unit == "Tonnes product weight") %>%
-  filter(is.na(value)==FALSE)
+# Change iso2c for United Kingdom (GB) to UK, which is what they use in the landings datafile labels
+cf_case_data_3 <- cf_case_data_3 %>%
+  mutate(iso2c = if_else(iso2c == "GB", true = "UK", false = iso2c)) 
 
-landings_case_no <- landings_dat_list$no %>%
-  filter(scientific_name == "Sebastes spp" & presentation == "Fresh, filleted") %>%
-  filter(unit == "Tonnes product weight") %>%
-  filter(is.na(value)==FALSE)
+cf_landings_case_study <- landings_cases_tonnes %>%
+  left_join(cf_case_data_3, by = c("x_labels", "nationality_of_vessel" = "country", "iso3c", "iso2c")) %>%
+  select(x_labels, common_name, nationality_of_vessel, iso3c, iso2c, year, value, reporting_entity, conversion_factor, note, reference) %>%
+  left_join(eu_wide_cf, by = "x_labels") %>%
+  group_by(x_labels, common_name, nationality_of_vessel, iso3c, iso2c, conversion_factor, note, reference, EU_CF) %>%
+  # Some countries explicitly report 0
+  filter(value != 0) %>%
+  # Just keep the most recent year for each case study
+  filter(year == max(year)) %>%
+  mutate(affiliation_of_vessel = case_when(iso3c %in% eu_codes ~ "EU",
+                                           TRUE ~ "non-EU")) %>%
+  arrange(x_labels) %>%
+  # Calculate catch
+  mutate(catch_by_national_CF = value * conversion_factor,
+         catch_by_EU_CF = value * EU_CF,
+         discrepancy = if_else(catch_by_national_CF != catch_by_EU_CF, true = "yes", false = "no")) %>%
+  ungroup()
 
+cf_landings_case_study_no_commas <- cf_landings_case_study %>%
+  mutate_all(~str_remove_all(., pattern = ",")) 
+
+write.csv(cf_landings_case_study_no_commas, file = file.path(outdir, "landings_case_studies_raw_data.csv"), row.names = FALSE, quote = FALSE)
+
+# How many are "interesting cases" - i.e., have at least one reporting entity with a discrepancy between EU and national CF value
+cf_landings_case_study %>%
+  group_by(x_labels) %>%
+  summarise(n_discrepancy = sum(discrepancy=="yes", na.rm = TRUE)) %>%
+  filter(n_discrepancy > 0)
+
+# Pivot for plotting
+case_study_plot <- cf_landings_case_study %>%
+  select(x_labels, common_name, nationality_of_vessel, affiliation_of_vessel, value, catch_by_national_CF, catch_by_EU_CF) %>%
+  rename(landings = value) %>%
+  pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
+  mutate(nationality_of_vessel = if_else(affiliation_of_vessel == "non-EU", true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
+  mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel))
+  
+
+
+for (i in 1:length(unique(case_study_plot$x_labels))){
+  plot_i <- case_study_plot %>%
+    filter(x_labels == unique(case_study_plot$x_labels)[i]) #%>%
+  # To re-order groups:
+    #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
+  sciname_presentation <- unique(plot_i$x_labels)
+  common_name <- unique(plot_i$common_name)
+  long_title <- paste(common_name, sciname_presentation, sep = "\n")
+  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = calculation)) +
+    geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+    labs(title = long_title, x = "Nationality of vessel", y = "Tonnes", fill = "") +
+    #scale_color_manual(values = group.colors) + 
+    #scale_shape_manual(values = group.shapes) +
+    scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                        breaks = c("landings", "catch_by_national_CF", "catch_by_EU_CF"),
+                        labels = c("landings", "catch by national CF", "catch by EU CF")) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12)) + 
+    coord_flip()
+  plot(p)
+  pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
+  ggsave(file = file.path(outdir, pngname))
+}
+
+  
+  
+
+# FIX IT: cross-check landings_dat (and final outputs) against country-specific queries in EUROSTAT website by country and species
 

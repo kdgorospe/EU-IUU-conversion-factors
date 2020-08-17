@@ -79,7 +79,7 @@ clean_landings <- function(eu_country){
            reporting_entity = geo) # Rename column names
   
   landings_dat_tidy <- landings_dat_coded %>%
-    pivot_longer(cols = starts_with('20'), names_to = "year") %>%
+    pivot_longer(cols = starts_with(c('20','19')), names_to = "year") %>%
     mutate(year = as.integer(year))
   
   return(landings_dat_tidy)
