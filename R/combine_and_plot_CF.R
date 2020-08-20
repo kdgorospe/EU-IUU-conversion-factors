@@ -7,6 +7,7 @@
 # Step 0
 rm(list=ls())
 library(tidyverse)
+library(ggplot2)
 library(rfishbase)
 library(countrycode)
 library(data.table) # rbindlist
@@ -102,7 +103,7 @@ unique_processing <- unique(cf_data$type_of_processing) %>%
 
 write.csv(unique_processing, file = file.path(outdir, "type_of_processing_list.csv"), quote = FALSE, row.names = FALSE)
 
-# Manually add in Euro Commission descriptions to type_of_processing_list.csv:
+# Manually add in Euro Commission descriptions to type_of_processing_list.csv, save as "type_of_processing_list_with_EU_codes.csv"
 # Ignore type_of_processing that are not part of EU_cf states (only consider alive, fresh, frozen)
 # Ignore anything salted - too ambiguous to translate to EU_cf codes
 
@@ -197,11 +198,13 @@ cf_data_countries <- cf_data_scinames %>%
                              country == "Uk" ~ "UK",
                              country == "Usa" ~ "USA", 
                              TRUE ~ country)) %>%
-  mutate(iso3c = countrycode(country, origin = "country.name", destination = "iso3c")) %>% # all match except "EU", manual fix in next step
-  # need iso2 code to pair with landings data
-  mutate(iso2c = countrycode(country, origin = "country.name", destination = "iso2c")) %>%
+  mutate(iso3c = countrycode(country, origin = "country.name", destination = "iso3c"),
+         # need iso2 code to pair with landings data
+         iso2c = countrycode(country, origin = "country.name", destination = "iso2c"),
+         continent = countrycode(iso3c, origin = "iso3c", destination = "continent")) %>% # all match except "EU", manual fix in next step
   mutate(iso3c = if_else(country == "EU", true = "EU", false = iso3c),
-         iso2c = if_else(country == "EU", true = "EU", false = iso2c))
+         iso2c = if_else(country == "EU", true = "EU", false = iso2c),
+         continent = if_else(country %in% c("EU", "Greenland"), true = "Europe", false = continent)) # For our purposes, recode Greenland from "Americas" to "Europe"
 
 # Before adding iso3c to EU data, simplify data by removing rows with note = "see list of CCF" - i.e., this means the country uses the EU-wide CF value for this species/state/presentation
 # FIX IT - if desired, can also add ICCAT website CF values
@@ -209,18 +212,30 @@ EU_cf_countries <- EU_cf_scinames %>%
   filter(note %in% c("see list of CCF", "see ICCAT website")==FALSE) %>%
   filter(country != "") %>%
   mutate(iso3c = countrycode(country, origin = "country.name", destination = "iso3c"),
-         iso2c = countrycode(country, origin = "country.name", destination = "iso2c"))
+         iso2c = countrycode(country, origin = "country.name", destination = "iso2c"),
+         continent = "Europe") # Set all the Europe (countrycode package considers Cyprus to be Asia, but keep as Europe since it's part of the EU)
 
 ############################################################################################################
-# Now join cf_data_scinames with EU_cf_scinames and do some final cleaning
+# Now join cf_data_scinames with EU_cf_scinames, identify EU vs European, non-EU, vs other, and do some final cleaning
+
+eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
+              "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
+              "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
+
 cf_data_full <- cf_data_countries %>%
   rbind(EU_cf_countries) %>%
   # deal with spp. vs spp 
   mutate(scientific_name = str_to_sentence(scientific_name)) %>%
   mutate(scientific_name = str_remove(scientific_name, pattern = "\\.")) %>% # standardize spp. vs spp by removing "."
   mutate(landings_code = paste(state, presentation, sep = ", ")) %>%
+  mutate(affiliation = if_else(iso3c %in% c(eu_codes, "EU"), true = "EU", false = "non-EU")) %>%
+  mutate(continent_affiliation = case_when(continent == "Europe" & affiliation == "EU" ~ "EU",
+                                           continent == "Europe" & affiliation == "non-EU" ~ "European, non-EU",
+                                           TRUE ~ "other")) %>% 
+  mutate(implementation = case_when(iso3c == "EU" ~ "EU-wide CF",
+                                    TRUE ~ "national CF")) %>%
   arrange(scientific_name, state, presentation, conversion_factor, country) %>%
-  select(scientific_name, state, presentation, landings_code, conversion_factor, country, iso3c, iso2c, note, reference)
+  select(scientific_name, state, presentation, landings_code, conversion_factor, country, iso3c, iso2c, continent_affiliation, implementation, note, reference)
 
 cf_data_no_commas <- cf_data_full %>%
   mutate_all(~str_remove_all(., pattern = ",")) 
@@ -230,15 +245,11 @@ write.csv(cf_data_no_commas, file.path(outdir, paste("compiled_cf_values_for_EU_
 ############################################################################################################
 # Step 2: Summarize
 
-eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
-              "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
-              "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
-
 cf_data_summary <- cf_data_full %>%
-  mutate(eu = if_else(iso3c %in% eu_codes, true = "EU", false = "non-EU")) %>%
   group_by(scientific_name, state, presentation) %>%
   summarise(n_CF = n(),
-            n_EU = sum(eu == "EU"),
+            n_EU = sum(continent_affiliation == "EU"),
+            n_nonEuropean = sum(continent_affiliation %in% c("Europe", "European, non-EU")==FALSE),
             max_CF = max(conversion_factor),
             min_CF = min(conversion_factor),
             range = max(conversion_factor) - min(conversion_factor)) %>% 
@@ -263,18 +274,10 @@ cf_case_studies <- cf_data_summary %>%
 cf_case_data <- cf_data_full %>%
   mutate(match_combo = paste(state, presentation, scientific_name, sep = ", ")) %>%
   filter(match_combo %in% cf_case_studies$match_combo) %>%
-  mutate(affiliation = case_when(iso3c %in% eu_codes ~ "EU",
-                                    iso3c == "EU" ~ "EU",
-                                    TRUE ~ "non-EU")) %>%
-  mutate(implementation = case_when(iso3c == "EU" ~ "EU-wide CF",
-                             TRUE ~ "national CF")) %>%
   mutate(x_labels = paste(scientific_name, " (", paste(state, presentation, sep = ", "), ")", sep = "")) %>%
   mutate(x_labels = as.factor(x_labels)) %>%
   # order case studies data from largest to smallest range in cf values (use match function to get index from cf_case_studies$match_combo)
   arrange(match(match_combo, cf_case_studies$match_combo))
-
-group.colors <- c("royalblue1", "tan1")
-group.shapes <- c(17, 20)
 
 # shapes:
 # 8 = asterisk
@@ -283,30 +286,36 @@ group.shapes <- c(17, 20)
 # 17 = filled triangle
 # 20 = smaller filled circle
 
-x_labels_as_numeric <- which(levels(cf_case_data$x_labels) %in% cf_case_data$x_labels)
+# PLOT: 
+all_theme <- theme_classic() + 
+  theme(axis.text.x = element_text(size = 16),
+        axis.text.y = element_text(size = 18),
+        axis.title = element_text(size = 24),
+        plot.title = element_text(size = 24, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+group.colors <- c("royalblue1", "tan1")
+group.shapes <- c(17, 20)
+x_labels_as_numeric <- which(levels(cf_case_data$x_labels) %in% cf_case_data$x_labels) # if need to specify which countries get a dotted line
 
 p <- ggplot(data = cf_case_data, mapping = aes(x = x_labels, y = conversion_factor)) +
-  geom_point(aes(color = affiliation, shape = implementation), size = 2.5) +
+  geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
   geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
   labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
   scale_color_manual(values = group.colors) + 
   scale_shape_manual(values = group.shapes) +
-  theme_classic() + 
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_text(size = 18),
-        plot.title = element_text(size = 18, hjust = 0),
-        legend.position = "bottom",
-        legend.box = "vertical",
-        legend.box.just = "left",
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) +
+  all_theme +
   coord_flip() 
 
 print(p)
 ggsave(file.path(outdir, "case_studies_cf_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
 
 ############################################################################################################
+#### LEFT OFF HERE:
 # Step 4: Plot CF Values that match presentations reported in landings data
 
 source("R/clean_landings.R")
@@ -555,8 +564,18 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
   ggsave(file = file.path(outdir, pngname))
 }
 
-  
-  
+
+# Expand case studies to non-EU, non-European countries:
+#List of yellow/red card countries for which we also have CF values: 
+#Panama
+#Ecuador
+#Trinidad and Tobago
+#Liberia
+#South Korea
+
+# Only species to intersect between EU_cf values and Tim's CF data that come from yellow card countries: Solea solea
+
+
 
 # FIX IT: cross-check landings_dat (and final outputs) against country-specific queries in EUROSTAT website by country and species
 
