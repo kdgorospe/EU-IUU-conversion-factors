@@ -82,6 +82,19 @@ clean_landings <- function(eu_country){
     pivot_longer(cols = starts_with(c('20','19')), names_to = "year") %>%
     mutate(year = as.integer(year))
   
+  ############################################################################################################
+  # Clean scientific names:
+  
+  # Use synonyms() function in rfishbase to make sure scientific names in cf_data_clean and EU_cf_clean are the current, accepted names
+  landings_dat_synonyms <- synonyms(unique(landings_dat_tidy$scientific_name), server = "fishbase") %>%
+    filter(Status == "synonym") %>%
+    select(synonym, Species)
+  
+  landings_dat_tidy <- landings_dat_tidy %>%
+    left_join(landings_dat_synonyms, by = c("scientific_name" = "synonym")) %>%
+    mutate(scientific_name = if_else(is.na(Species)==FALSE, true = Species, false = scientific_name)) %>%
+    select(-Species)
+  
   return(landings_dat_tidy)
   
   }
