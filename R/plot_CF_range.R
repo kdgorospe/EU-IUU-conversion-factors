@@ -93,7 +93,7 @@ cf_range_theme <- theme_classic() +
         legend.title = element_text(size = 20),
         legend.text = element_text(size = 16))
 
-group.colors <- c("royalblue1", "tan1", "orangered")
+group.colors <- c("royalblue1", "tan1", "gray")
 group.shapes <- c(17, 20)
 x_labels_as_numeric <- which(levels(cf_case_data$x_labels) %in% cf_case_data$x_labels) # if need to specify which countries get a dotted line
 
