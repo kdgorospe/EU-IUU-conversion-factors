@@ -243,9 +243,10 @@ cf_data_full <- cf_data_countries %>%
 
 # If multiple CF values for same country + species + state + presentation, keep only EU Annex version
 cf_data_full <- cf_data_full %>%
-  group_by(scientific_name, landings_code, country) %>%
+  group_by(scientific_name, landings_code, iso3c) %>%
   mutate(n_CF = n()) %>%
-  filter(n_CF == 1 | reference == "EU Council Regulations Annex")
+  filter(n_CF == 1 | reference == "EU Council Regulations Annex") %>%
+  ungroup()
 
 cf_data_no_commas <- cf_data_full %>%
   mutate_all(~str_remove_all(., pattern = ",")) 
@@ -322,7 +323,7 @@ p <- ggplot(data = cf_case_data, mapping = aes(x = x_labels, y = conversion_fact
   coord_flip() 
 
 print(p)
-ggsave(file.path(outdir, "case_studies_cf_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
+#ggsave(file.path(outdir, "case_studies_cf_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
 
 ############################################################################################################
 # Step 4: Plot CF Values that match presentations reported in landings data
@@ -400,7 +401,7 @@ p <- ggplot(data = cf_case_data_2, mapping = aes(x = x_labels, y = conversion_fa
   coord_flip() 
 
 print(p)
-ggsave(file.path(outdir, "case_studies_cf_values_for_landings_presentations.png"))
+#ggsave(file.path(outdir, "case_studies_cf_values_for_landings_presentations.png"))
 
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_2 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_for_landings_presentations_raw_data.csv"), quote = FALSE, row.names = FALSE)
@@ -437,14 +438,15 @@ p <- ggplot(data = cf_case_data_3, mapping = aes(x = x_labels, y = conversion_fa
   coord_flip() 
 
 print(p)
-ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png"))
+#ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png"))
 
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_3 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data.csv"), quote = FALSE, row.names = FALSE)
 
 
 ############################################################################################################
-# Step 4: Landings: Use cf_case_data_3 (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
+# Step 4: Use landings data and CF values to back-calculate nominal catch
+# Use cf_case_data_3 as list of case studies (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
 
 #landings_case_studies <- unique(cf_case_data_3$x_labels)
 
@@ -485,7 +487,7 @@ eu_wide_cf <- cf_case_data_3 %>%
 landings_dat <- rbindlist(landings_dat_list)
 
 # retain only species + presentations in cf_cases
-landings_cases_tonnes <- landings_dat %>%
+landings_cases <- landings_dat %>%
   filter(is.na(value)==FALSE) %>%
   mutate(x_labels = paste(scientific_name, " (", presentation, ")", sep = "")) %>%
   filter(x_labels %in% cf_cases) %>%
@@ -501,31 +503,32 @@ landings_cases_tonnes <- landings_dat %>%
   mutate(port_iso2c = if_else(port_iso2c == "GB", true = "UK", false = port_iso2c)) %>%
   # Remove non-country vessels, no iso3c e.g., "European union", "European Free Trade Association"
   filter(is.na(vessel_iso3c)==FALSE) %>%
-  filter(unit == "Tonnes product weight") %>%
-  # Other uses include: Human consumption, etc.
-  filter(use == "Total") %>%
-  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, value, year, reporting_entity, port_iso3c, port_iso2c)
+  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, value, unit, use, year, reporting_entity, port_iso3c, port_iso2c)
 
 # Change iso2c for United Kingdom (GB) to UK, which is what they use in the landings datafile labels
 cf_case_data_3 <- cf_case_data_3 %>%
   mutate(iso2c = if_else(iso2c == "GB", true = "UK", false = iso2c)) 
 
-cf_landings_case_study <- landings_cases_tonnes %>%
+landings_case_study_tonnes <- landings_cases %>%
+  filter(unit == "Tonnes product weight" & use == "Total") %>%
+  # Other uses include: Human consumption, etc.
   # Match CF values to vessel nationality
   left_join(cf_case_data_3, by = c("x_labels", "vessel_iso3c" = "iso3c", "vessel_iso2c" = "iso2c")) %>%
-  select(x_labels, common_name, year, value, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, conversion_factor) %>%
-  rename(vessel_CF = conversion_factor) %>%
+  select(x_labels, common_name, year, value, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, conversion_factor, reference) %>%
+  rename(vessel_CF = conversion_factor,
+         vessel_ref = reference) %>%
   # Match CF values to port nationality
   left_join(cf_case_data_3, by = c("x_labels", "port_iso3c" = "iso3c", "port_iso2c" = "iso2c")) %>%
-  select(x_labels, common_name, year, value, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, vessel_CF, conversion_factor) %>%
-  rename(port_CF = conversion_factor) %>%
+  select(x_labels, common_name, year, value, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, vessel_CF, vessel_ref, conversion_factor, reference) %>%
+  rename(port_CF = conversion_factor,
+         port_ref = reference) %>%
   # Join with EU-Wide CF data
   left_join(eu_wide_cf, by = "x_labels") %>%
   # Some countries explicitly report 0
   filter(value != 0) %>%
-  # Group by all values except year and value:
-  group_by_at(setdiff(names(.), c("year", "value"))) %>%
+  #group_by_at(setdiff(names(.), c("year", "value"))) %>%
   #group_by(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, conversion_factor, EU_CF) %>%
+  group_by(x_labels, nationality_of_vessel) %>%
   # Just keep the most recent year for each case study
   filter(year == max(year)) %>%
   arrange(x_labels) %>%
@@ -534,33 +537,26 @@ cf_landings_case_study <- landings_cases_tonnes %>%
          catch_by_port_CF = value * port_CF,
          catch_by_EU_CF = value * EU_CF,
          vessel_v_EU_discrepancy = if_else(catch_by_vessel_CF != catch_by_EU_CF, true = "yes", false = "no"),
-         port_v_EU_discrepancy = if_else(catch_by_port_CF != catch_by_EU_CF, true = "yes", false = "no")) %>%
-  ungroup()
-
-cf_landings_case_study_no_commas <- cf_landings_case_study %>%
-  mutate_all(~str_remove_all(., pattern = ",")) 
-
-write.csv(cf_landings_case_study_no_commas, file = file.path(outdir, "landings_case_studies_raw_data.csv"), row.names = FALSE, quote = FALSE)
-
-# How many are "interesting cases" - i.e., have at least one reporting entity with a discrepancy between EU and national CF value
-cf_landings_case_study %>%
+         port_v_EU_discrepancy = if_else(catch_by_port_CF != catch_by_EU_CF, true = "yes", false = "no"),
+         port_v_vessel_discrepancy = if_else(catch_by_port_CF != catch_by_vessel_CF, true = "yes", false = "no")) %>%
+  # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
+  ungroup() %>%
   group_by(x_labels) %>%
-  summarise(n_discrepancy = sum(sum(vessel_v_EU_discrepancy=="yes", na.rm = TRUE) + sum(port_v_EU_discrepancy=="yes", na.rm = TRUE), na.rm = TRUE)) %>%
-  filter(n_discrepancy > 0)
+  mutate(n_discrepancy = sum(vessel_v_EU_discrepancy=="yes", na.rm = TRUE)) %>%
+  filter(n_discrepancy > 0) %>%
+  ungroup() %>%
+  select(-c("vessel_v_EU_discrepancy", "port_v_EU_discrepancy", "port_v_vessel_discrepancy", "n_discrepancy"))
+
+write.csv(landings_case_study_tonnes %>% mutate_all(~str_remove_all(., pattern = ",")) , file = file.path(outdir, "landings_case_studies_raw_data.csv"), row.names = FALSE, quote = FALSE)
 
 # Pivot and clean for plotting
-case_study_plot <- cf_landings_case_study %>%
-  select(x_labels, common_name, nationality_of_vessel, vessel_CF, reporting_entity, port_CF, EU_CF, value, catch_by_vessel_CF, catch_by_port_CF, catch_by_EU_CF) %>%
-  # If only interested in comparing catch values for port vs vessel if portcountry != vesselcountry (Note: but even when this is true, the CF value for port vs vessel is still the same)
-  # mutate(catch_by_port_CF = if_else(nationality_of_vessel != reporting_entity, true = catch_by_port_CF, false = NaN)) %>% 
-  # If only interested in comparing catch values for port vs vessel if CF's are different: Out of 118 cases where portcountry != vesselcountry, only 16 cases have different CF values
-  mutate(catch_by_port_CF = if_else(vessel_CF == port_CF, true = NaN, false = catch_by_port_CF)) %>% 
-  rename(landings = value) #%>%
-  pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") #%>%
-  mutate(nationality_of_vessel = if_else(affiliation_of_vessel == "non-EU", true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
+case_study_plot <- landings_case_study_tonnes %>%
+  # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
+  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, vessel_CF, port_CF, EU_CF, value, catch_by_vessel_CF, catch_by_EU_CF) %>%
+  rename(landings = value) %>%
+    pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
+  mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
   mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel))
-  
-
 
 for (i in 1:length(unique(case_study_plot$x_labels))){
   plot_i <- case_study_plot %>%
@@ -576,7 +572,7 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
     #scale_color_manual(values = group.colors) + 
     #scale_shape_manual(values = group.shapes) +
     scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
-                        breaks = c("landings", "catch_by_national_CF", "catch_by_EU_CF"),
+                        breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
                         labels = c("landings", "catch by national CF", "catch by EU CF")) +
     theme_classic() + 
     theme(axis.text.x = element_text(size = 12),
@@ -590,7 +586,96 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
           legend.text = element_text(size = 12)) + 
     coord_flip()
   plot(p)
-  pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
+  #pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
+  #ggsave(file = file.path(outdir, pngname))
+}
+
+############################################################################################################
+# Step 5: Calculate nominal catch (using state vs EU-wide CF value) across multiple presentations for single species and combine as total catch
+# Present this as a time series
+# For some presentations that do not have a matching CF value, 
+
+# THREE CASE STUDIES: Cod, Hake, Monkfish
+
+# First get ALL EU-wide values
+eu_wide_cf_full <- cf_data_full %>%
+  filter(iso3c == "EU")
+
+
+country_i <- "Spain"
+species_i <- "Merluccius merluccius"
+landings_total <- landings_dat %>% 
+  filter(nationality_of_vessel == country_i & scientific_name == species_i) %>%
+  filter(unit == "Tonnes product weight" & use == "Total") %>%
+  mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
+  # Get species, presentation, and country-specific CF values
+  left_join(cf_data_full, by = c("presentation" = "landings_code", "iso3c", "scientific_name")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, year, value, iso3c, conversion_factor, reference) %>%
+  rename(national_CF = conversion_factor,
+         national_ref = reference,
+         vessel_iso3c = iso3c) %>%
+  # Get species, presentation, EU-wide CF value:
+  left_join(eu_wide_cf_full, by = c("scientific_name", "presentation" = "landings_code")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, vessel_iso3c, year, value,  national_CF, national_ref, conversion_factor, reference) %>%
+  rename(EU_wide_CF = conversion_factor,
+         EU_ref = reference) %>%
+  mutate(catch_by_national_CF = national_CF * value,
+         catch_by_EU_CF = EU_wide_CF * value) %>%
+  # Create a column for all presentations based on whether or not they have a national CF value (probably too many different types of presentations to display on graph)
+  # PLAN TO HAVE THESE LISTED AS A SIDE BAR ON THE GRAPH
+  mutate(presentation_national = if_else(is.na(catch_by_national_CF)==FALSE, true = presentation, false = "no national CF value")) 
+## LEFT OFF HERE - do the same for EU_wide CF value
+  
+  
+
+############################################################################################################
+# Step 5: Same as Step 4, but plot monetary value: Use cf_case_data_3 (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
+# FIX IT - FIX landings_prices: currently uses the most recent available prices (unit = Euro per tonne), which may or may not match to the year of landings data (unit = Tonnes product weight)
+# FIX IT - Calculations are not real; processing actually adds value to fish catch, so using the price per tonne of product weight to back-calculate the total value of whole, unprocessed catch is wrong
+# "PIVOT" landings Euro per tonne values into its own column
+landings_prices <- landings_cases %>%
+  filter(unit == "Euro per tonne" & use == "Total") %>%
+  group_by(x_labels, vessel_iso3c, vessel_iso2c) %>%
+  filter(year == max(year)) %>%
+  ungroup() %>%
+  select(x_labels, vessel_iso3c, vessel_iso2c, value) %>%
+  rename(Euro_per_tonne = value)
+
+# Plot landings data based on monetary value:
+landings_case_study_euros <- case_study_plot %>%
+  left_join(landings_prices, by = c("x_labels", "vessel_iso3c", "vessel_iso2c")) %>%
+  mutate(Euros = value * Euro_per_tonne)
+  
+
+for (i in 1:length(unique(landings_case_study_euros$x_labels))){
+  plot_i <- landings_case_study_euros %>%
+    filter(x_labels == unique(landings_case_study_euros$x_labels)[i]) #%>%
+  # To re-order groups:
+  #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
+  sciname_presentation <- unique(plot_i$x_labels)
+  common_name <- unique(plot_i$common_name)
+  long_title <- paste(common_name, sciname_presentation, sep = "\n")
+  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = Euros, group = calculation)) +
+    geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+    labs(title = long_title, x = "Nationality of vessel", y = "Euros", fill = "") +
+    #scale_color_manual(values = group.colors) + 
+    #scale_shape_manual(values = group.shapes) +
+    scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                      breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                      labels = c("Landings in Euros", "Catch in Euros by national CF", "Catch in Euros by EU CF")) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12)) + 
+    coord_flip()
+  plot(p)
+  pngname <- paste("landings_vs_catch_in_Euros_case_study_", i, "_", sciname_presentation, ".png", sep = "")
   ggsave(file = file.path(outdir, pngname))
 }
 
