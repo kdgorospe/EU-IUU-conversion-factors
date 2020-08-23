@@ -112,6 +112,10 @@ print(p)
 ############################################################################################################
 # Step 4: Plot CF Values that match presentations reported in landings data
 
+eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
+              "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
+              "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
+
 source("R/clean_landings.R")
 
 # NOTE: very limited in what we can back calculate from landings data because the CF state+presentation codes do not perfectly match/align with landings codes (see notes in code above for EU_cf_clean)
