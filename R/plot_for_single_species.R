@@ -1,6 +1,12 @@
 # Kelvin Gorospe kdgorospe@gmail.com
 # Provide recommendations Re: conversion factor values for Environmental Justice Fund EU-IUU project
 
+# For a single species and country, plot a time series of:
+# landings per presentation form,
+# catch for each presentation form, and
+# total catch summed across all presentation forms (with CF values)
+# Do this for both national and EU-wide CF values as separate plots and also combined into a single plot
+
 # Step 0: Load libraries, set directories
 
 rm(list=ls())
@@ -26,7 +32,6 @@ library(data.table) # rbindlist
 #artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
 #outdir <- "/Volumes/jgephart/EU IUU/Outputs"
-
 
 # Windows:
 datadir <- "K:/ARTIS/Data"
