@@ -96,8 +96,7 @@ landings_availability <- landings_dat %>%
   # ONLY KEEP THE EU COUNTRIES
   filter(iso3c %in% eu_codes) %>%
   group_by(scientific_name, presentation) %>%
-  summarise(list_of_countries_landing = paste(nationality_of_vessel, sep = ", ", collapse = ", "),
-            list_of_iso3c_landing = paste(iso3c, sep = ", ", collapse = ", "),
+  summarise(list_of_iso3c_landing = paste(iso3c, sep = ", ", collapse = ", "),
             n_countries = n()) %>%
   ungroup()
 
@@ -106,13 +105,30 @@ CF_availability <- cf_data_full %>%
   filter(iso3c %in% eu_codes) %>%
   filter(reference == "EU Council Regulations Annex") %>%
   select(scientific_name, landings_code, country, iso3c) %>%
-  unique()%>%
+  unique() %>%
   group_by(scientific_name, landings_code) %>%
-  summarise(list_of_countries_CF = paste(country),
-            list_of_iso3c_CF = paste(iso3c, sep = ", ", collapse = ", "),
+  summarise(list_of_iso3c_CF = paste(iso3c, sep = ", ", collapse = ", "),
             n_CF = n()) %>%
   ungroup()
 
-# LEFT OFF HERE - why are there extra rows after left_join???
 heat_map_dat <- landings_availability %>%
-  left_join(CF_availability, by = c("scientific_name", "presentation" = "landings_code"))
+  left_join(CF_availability, by = c("scientific_name", "presentation" = "landings_code")) %>%
+  # HERE NA's in n_CF are actually zeros - i.e., there are countries that catch this species + presentation but no countries have a CF value
+  mutate(n_CF = replace_na(n_CF, 0)) %>%
+  mutate(proportion_have_CF = n_CF / n_countries)
+
+heat_map_grid <- expand.grid(scientific_name = unique(heat_map_dat$scientific_name), presentation = unique(heat_map_dat$presentation)) %>%
+  left_join(heat_map_dat, by = c("scientific_name", "presentation")) %>%
+  arrange(scientific_name, presentation)
+# NOTE: here NAs mean no one is actually landing that particular species+presentation combo
+
+p <- ggplot(data = heat_map_grid, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
+  geom_raster()
+
+print(p)
+
+length(unique(heat_map_grid$scientific_name))
+length(unique(heat_map_grid$presentation))
+
+# What if focus only on fish species:
+heat_map_grid$scientific_name
