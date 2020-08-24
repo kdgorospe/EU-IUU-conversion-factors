@@ -115,13 +115,22 @@ heat_map_dat <- landings_availability %>%
   left_join(CF_availability, by = c("scientific_name", "presentation" = "landings_code")) %>%
   # HERE NA's in n_CF are actually zeros - i.e., there are countries that catch this species + presentation but no countries have a CF value
   mutate(n_CF = replace_na(n_CF, 0)) %>%
-  mutate(proportion_have_CF = n_CF / n_countries)
+  mutate(proportion_have_CF = n_CF / n_countries) %>%
+  # IN SOME CASES, MORE COUNTRIES HAVE A CF VALUE FOR A SPECIES + PRESENTATION COMBO THAN THE NUMBER OF COUNTRIES THAT ARE LANDING IT - cap this at 1
+  mutate(proportion_have_CF = if_else(proportion_have_CF > 1, true = 1, false = proportion_have_CF))
 
 heat_map_grid <- expand.grid(scientific_name = unique(heat_map_dat$scientific_name), presentation = unique(heat_map_dat$presentation)) %>%
   left_join(heat_map_dat, by = c("scientific_name", "presentation")) %>%
   arrange(scientific_name, presentation)
 # NOTE: here NAs mean no one is actually landing that particular species+presentation combo
 
+# CHECK THAT ALL SPECIES ARE CAUGHT
+heat_map_grid %>%
+  group_by(scientific_name) %>%
+  summarise(n_landings = sum(n_countries, na.rm = TRUE)) %>%
+  filter(n_landings < 1)  
+    
+  
 p <- ggplot(data = heat_map_grid, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
   geom_raster()
 
@@ -130,5 +139,55 @@ print(p)
 length(unique(heat_map_grid$scientific_name))
 length(unique(heat_map_grid$presentation))
 
-# What if focus only on fish species:
-heat_map_grid$scientific_name
+# What if we focus only on fish species:
+fish_only <- synonyms(unique(heat_map_grid$scientific_name), server = "fishbase") %>%
+  filter(Status == "accepted name") %>%
+  pull(Species)
+
+fish_heat_map <- heat_map_grid %>% 
+  filter(scientific_name %in% fish_only) %>%
+  arrange(scientific_name, presentation)
+
+p <- ggplot(data = fish_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
+  geom_raster()
+
+print(p)
+
+length(unique(fish_heat_map$scientific_name))
+length(unique(fish_heat_map$presentation))
+
+
+non_fish_heat_map <- heat_map_grid %>% 
+  filter(scientific_name %in% fish_only==FALSE) %>%
+  arrange(scientific_name, presentation)
+
+p <- ggplot(data = non_fish_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
+  geom_raster()
+
+print(p)
+
+length(unique(non_fish_heat_map$scientific_name))
+length(unique(non_fish_heat_map$presentation))
+
+# WHAT IF WE FOCUS ON ONLY THE TOP LANDED SPECIES?
+landings_summary <- landings_dat %>%
+  mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
+  # ONLY KEEP THE EU COUNTRIES
+  filter(iso3c %in% eu_codes) %>%
+  group_by(scientific_name) %>%
+  summarise(total_landings = sum(value, na.rm = TRUE)) %>%
+  arrange(desc(total_landings)) %>%
+  mutate(cumulative_sum = cumsum(total_landings)) %>%
+  mutate(proportion = cumulative_sum / sum(total_landings))
+
+top_50 <- landings_summary$scientific_name[1:50]
+  
+# Focus just on the top 50 species (accounts for 87.1 % of total landings from 1992 - 2018)
+top_50_heat_map <- heat_map_grid %>% 
+  filter(scientific_name %in% top_50) %>%
+  arrange(scientific_name, presentation)
+
+p <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
+  geom_raster()
+
+print(p)
