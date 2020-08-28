@@ -45,6 +45,9 @@ source("R/combine_CF_datasets.R")
 cf_data_full <- combine_CF_datasets()
 # Ignore warning message about EU; iso3c and iso2c is set to "EU" manually within the function
 
+# FIX IT - for now, limiting to CF values from EU Council Regulations Annex:
+cf_data_full <- cf_data_full %>%
+  filter(reference == "EU Council Regulations Annex")
 
 source("R/clean_landings.R")
 # Note: although there is a "main" landings dataset this only reports TOTALS, need to go to each individual country's landings data in order to get nationality of vessels
@@ -58,7 +61,7 @@ landings_dat <- lapply(iso2_landings, function(i){clean_landings(eu_country = i)
 names(landings_dat) <- iso2_landings
 landings_dat <- rbindlist(landings_dat)
 
-# Clean for landings data only
+# Combine all landings data:
 # data contains rows that already sum across multiple presentation forms: e.g., fresh = fresh, alive + fresh, filleted + fresh, gutted, etc.
 # filter these out
 grouped_presentation_forms <- c("All presentation forms", "Dried", "Fresh", "Frozen", "Salted")
@@ -103,6 +106,7 @@ landings_availability <- landings_dat %>%
 CF_availability <- cf_data_full %>%
   # ONLY KEEP THE EU COUNTRIES
   filter(iso3c %in% eu_codes) %>%
+  # ONLY KEEP THE EU Council Regulations Annex values
   filter(reference == "EU Council Regulations Annex") %>%
   select(scientific_name, landings_code, country, iso3c) %>%
   unique() %>%
