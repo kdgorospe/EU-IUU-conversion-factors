@@ -26,16 +26,16 @@ library(data.table) # rbindlist
 
 # MacOS:
 # Data folders:
-#datadir <- "/Volumes/jgephart/ARTIS/Data"
-#artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
+datadir <- "/Volumes/jgephart/ARTIS/Data"
+artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
-#outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+outdir <- "/Volumes/jgephart/EU IUU/Outputs"
 
 # Windows:
-datadir <- "K:/ARTIS/Data"
-artis_outputs <- "K:/ARTIS/Outputs"
+#datadir <- "K:/ARTIS/Data"
+#artis_outputs <- "K:/ARTIS/Outputs"
 # Output folder:
-outdir <- "K:/EU IUU/Outputs"
+#outdir <- "K:/EU IUU/Outputs"
 
 ############################################################################################################
 # Step 1: Get CF data and Landings data
@@ -94,7 +94,8 @@ cf_min_max <- cf_data_full %>%
             max_iso3c = paste(iso3c[conversion_factor == max_cf], sep = ", ", collapse = ", ") ) %>%
   ungroup()
 
-species_i <- "Merluccius merluccius"
+#species_i <- "Gadus morhua"
+species_i <- "Lophiidae"
 
 landings_all_pres <- landings_dat %>% 
   filter(scientific_name == species_i) %>%
@@ -153,7 +154,8 @@ p <- ggplot() +
   geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_max), linetype = "dashed")
 
 plot(p)
-  
+pngname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_i, pattern = " ", replacement = "-"), ".png", sep = "")
+ggsave(file = file.path(outdir, pngname))  
   
   
 

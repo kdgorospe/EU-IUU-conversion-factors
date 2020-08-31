@@ -80,7 +80,7 @@ landings_dat <- landings_dat %>%
 # Step 2: Calculate nominal catch (using state vs EU-wide CF value) across multiple presentations for single species and combine as total catch
 # Present this as a time series
 
-# THREE CASE STUDIES: Cod, Hake, Monkfish
+# THREE CASE STUDIES: Cod (Gadus morhua - Try Portugal), Hake (Merluccius merluccius - Try Spain), Monkfish (Lophiidae - try Germany)
 # WHICH COUNTRIES TO USE? See landings case studies to focus on countries with large CF values
 
 
@@ -88,8 +88,8 @@ landings_dat <- landings_dat %>%
 eu_wide_cf_full <- cf_data_full %>%
   filter(iso3c == "EU")
 
-country_i <- "Spain"
-species_i <- "Merluccius merluccius"
+country_i <- "Sweden"
+species_i <- "Lophiidae"
 
 landings_all_pres <- landings_dat %>% 
   filter(nationality_of_vessel == country_i & scientific_name == species_i) %>%
@@ -226,40 +226,47 @@ only_national_CF <- intersect(only_one_type_CF, no_EU_wide_CF)
 # And which presentations only have an EU-wide CF value (and display it's nominal catch)
 only_EU_wide_CF <- intersect(only_one_type_CF, no_national_CF)
 
-size_for_common_lines <- 2
+size_for_common_lines <- 1
 
 p <- ggplot() +
+  # Just the landings (no catch calculation)
   geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation_national), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
-  geom_line(data = total_catch_national_CF, aes(x = year, y = total_catch), linetype = "dotted", size = size_for_common_lines) +
-  geom_line(data = total_catch_EU_wide_CF, aes(x = year, y = total_catch), linetype = "dashed", size = size_for_common_lines) +
-  geom_line(data = no_catch_calculation, aes(x = year, y = total_landings_no_CF), linetype = "solid", size = size_for_common_lines)
+  geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch), linetype = "dotted", size = size_for_common_lines) +
+  geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch), linetype = "dashed", size = size_for_common_lines)
 
-if (length(only_national_CF) > 0){
-  only_national_catch <- landings_with_national_CF %>%
-    filter(presentation_national %in% only_national_CF) %>%
-    group_by(year) %>%
-    summarize(total_landings_only_national_CF = sum(landings),
-              total_catch_only_national_CF = sum(catch_by_national_CF)) %>%
-    ungroup()
-  p <- p + 
-    geom_line(data = only_national_catch, aes(x = year, y = total_landings_only_national_CF), color = "tan1", linetype = "solid") +
-    geom_line(data = only_national_catch, aes(x = year, y = total_catch_only_national_CF), color = "tan1", linetype = "dashed")
-}
+# IF WANT TO INCLUDE PRESENTATIONS FOR WHICH THERE IS NO CATCH CALCULATION (i.e., NO NATIONAL OR EU CF VALUE), ADD THE FOLLOWING LAYER:
+  #geom_line(data = no_catch_calculation, aes(x = year, y = total_landings_no_CF), linetype = "solid", size = size_for_common_lines)
 
-if (length(only_EU_wide_CF) > 0){
-  only_EU_wide_catch <- landings_with_EU_wide_CF %>%
-    filter(presentation_EU_wide %in% only_EU_wide_CF) %>%
-    group_by(year) %>%
-    summarize(total_landings_only_EU_wide_CF = sum(landings),
-              total_catch_only_EU_wide_CF = sum(catch_by_EU_wide_CF)) %>%
-    ungroup()
-  p <- p + 
-    geom_line(data = only_EU_wide_catch, aes(x = year, y = total_landings_only_EU_wide_CF), color = "royalblue1", linetype = "solid") +
-    geom_line(data = only_EU_wide_catch, aes(x = year, y = total_catch_only_EU_wide_CF), color = "royalblue1", linetype = "dashed")
-  # NOTE: for Merluccius merluccius, whole fish officially only has an EU wide CF value, so plot only shows single solid line, since catch is identical (CF = 1)
-}
+# IF WANT TO INCLUDE PRESENTATION FOR WHICH THERE IS ONLY A NATIONAL CF VALUE:
+# if (length(only_national_CF) > 0){
+#   only_national_catch <- landings_with_national_CF %>%
+#     filter(presentation_national %in% only_national_CF) %>%
+#     group_by(year) %>%
+#     summarize(total_landings_only_national_CF = sum(landings),
+#               total_catch_only_national_CF = sum(catch_by_national_CF)) %>%
+#     ungroup()
+#   p <- p + 
+#     geom_line(data = only_national_catch, aes(x = year, y = total_landings_only_national_CF), color = "tan1", linetype = "solid") +
+#     geom_line(data = only_national_catch, aes(x = year, y = total_catch_only_national_CF), color = "tan1", linetype = "dashed")
+# }
+
+# IF WANT TO INCLUDE PRESENTATIONS FOR WHICH THERE IS ONLY AN EU WIDE CF VALUE:
+# if (length(only_EU_wide_CF) > 0){
+#   only_EU_wide_catch <- landings_with_EU_wide_CF %>%
+#     filter(presentation_EU_wide %in% only_EU_wide_CF) %>%
+#     group_by(year) %>%
+#     summarize(total_landings_only_EU_wide_CF = sum(landings),
+#               total_catch_only_EU_wide_CF = sum(catch_by_EU_wide_CF)) %>%
+#     ungroup()
+#   p <- p + 
+#     geom_line(data = only_EU_wide_catch, aes(x = year, y = total_landings_only_EU_wide_CF), color = "royalblue1", linetype = "solid") +
+#     geom_line(data = only_EU_wide_catch, aes(x = year, y = total_catch_only_EU_wide_CF), color = "royalblue1", linetype = "dashed")
+#   # NOTE: for Merluccius merluccius, whole fish officially only has an EU wide CF value, so plot only shows single solid line, since catch is identical (CF = 1)
+# }
 
 plot(p)
+pngname <- paste("landings-vs-catch_", country_i, "-vs-EU_", str_replace(species_i, pattern = " ", replacement = "-"), ".png", sep = "")
+ggsave(file = file.path(outdir, pngname))
 
 # LEFT OFF HERE:
 # OUTPUT raw data for their graphics people:
