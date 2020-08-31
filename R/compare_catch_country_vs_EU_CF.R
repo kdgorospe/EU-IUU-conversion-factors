@@ -28,16 +28,16 @@ library(data.table) # rbindlist
 
 # MacOS:
 # Data folders:
-#datadir <- "/Volumes/jgephart/ARTIS/Data"
-#artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
+datadir <- "/Volumes/jgephart/ARTIS/Data"
+artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
-#outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+outdir <- "/Volumes/jgephart/EU IUU/Outputs"
 
 # Windows:
-datadir <- "K:/ARTIS/Data"
-artis_outputs <- "K:/ARTIS/Outputs"
+#datadir <- "K:/ARTIS/Data"
+#artis_outputs <- "K:/ARTIS/Outputs"
 # Output folder:
-outdir <- "K:/EU IUU/Outputs"
+#outdir <- "K:/EU IUU/Outputs"
 
 ############################################################################################################
 # Step 1: Get CF data and Landings data
