@@ -28,16 +28,16 @@ library(data.table) # rbindlist
 
 # MacOS:
 # Data folders:
-#datadir <- "/Volumes/jgephart/ARTIS/Data"
-#artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
+datadir <- "/Volumes/jgephart/ARTIS/Data"
+artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
-#outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+outdir <- "/Volumes/jgephart/EU IUU/Outputs"
 
 # Windows:
-datadir <- "K:/ARTIS/Data"
-artis_outputs <- "K:/ARTIS/Outputs"
+#datadir <- "K:/ARTIS/Data"
+#artis_outputs <- "K:/ARTIS/Outputs"
 # Output folder:
-outdir <- "K:/EU IUU/Outputs"
+#outdir <- "K:/EU IUU/Outputs"
 
 ############################################################################################################
 # Step 1: Get CF data and Landings data
@@ -76,7 +76,7 @@ landings_dat <- landings_dat %>%
   filter(is.na(scientific_name)==FALSE)
 
 ############################################################################################################
-# Step 2: What are all the species+presentation combinations:
+# Step 2: Calculate and plot the proportion of all landed species+presentation combinations that have a country-level CF value
 all_combos <- unique(landings_dat[,c("common_name", "scientific_name", "presentation")])
 
 length(unique(all_combos$scientific_name))
@@ -192,6 +192,70 @@ top_50_heat_map <- heat_map_grid %>%
   arrange(scientific_name, presentation)
 
 p <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
-  geom_raster()
+  geom_raster() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 print(p)
+ggsave(file = file.path(outdir, "CF_natonal_values_heat_map.png"))
+
+
+############################################################################################################
+# Step 2: Plot yes/no whether a species+presentation combinations has an EU-level CF value
+
+# keep same landings_availability as above
+
+# redo CF_availability
+CF_availability <- cf_data_full %>%
+  # ONLY KEEP THE EU COUNTRIES
+  filter(iso3c == "EU") %>%
+  # ONLY KEEP THE EU Council Regulations Annex values
+  filter(reference == "EU Council Regulations Annex") %>%
+  select(scientific_name, landings_code, country, iso3c) %>%
+  unique() %>%
+  group_by(scientific_name, landings_code) %>%
+  summarise(list_of_iso3c_CF = paste(iso3c, sep = ", ", collapse = ", "),
+            EU_CF = case_when(n()>0 ~ "yes",
+                              n()==0 ~ "no",
+                              TRUE ~ "error")) %>%
+  ungroup()
+
+heat_map_dat <- landings_availability %>%
+  left_join(CF_availability, by = c("scientific_name", "presentation" = "landings_code")) %>%
+  # HERE NA's in n_CF are actually zeros - i.e., there are countries that catch this species + presentation but no countries have a CF value
+  mutate(EU_CF = replace_na(EU_CF, 0)) 
+
+heat_map_grid <- expand.grid(scientific_name = unique(heat_map_dat$scientific_name), presentation = unique(heat_map_dat$presentation)) %>%
+  left_join(heat_map_dat, by = c("scientific_name", "presentation")) %>%
+  arrange(scientific_name, presentation)
+# NOTE: here NAs mean no one is actually landing that particular species+presentation combo
+
+# CHECK THAT ALL SPECIES ARE CAUGHT
+heat_map_grid %>%
+  group_by(scientific_name) %>%
+  summarise(n_landings = sum(n_countries, na.rm = TRUE)) %>%
+  filter(n_landings < 1)  
+
+# FOCUS ON ONLY THE TOP LANDED SPECIES?
+landings_summary <- landings_dat %>%
+  mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
+  # ONLY KEEP THE EU COUNTRIES
+  filter(iso3c %in% eu_codes) %>%
+  group_by(scientific_name) %>%
+  summarise(total_landings = sum(value, na.rm = TRUE)) %>%
+  arrange(desc(total_landings)) %>%
+  mutate(cumulative_sum = cumsum(total_landings)) %>%
+  mutate(proportion = cumulative_sum / sum(total_landings))
+
+top_50 <- landings_summary$scientific_name[1:50]
+
+# Focus just on the top 50 species (accounts for 87.1 % of total landings from 1992 - 2018)
+top_50_heat_map <- heat_map_grid %>% 
+  filter(scientific_name %in% top_50) %>%
+  arrange(scientific_name, presentation)
+
+p <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = EU_CF)) +
+  geom_raster() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(p)
+ggsave(file = file.path(outdir, "CF_EU_values_yes_no.png"))
