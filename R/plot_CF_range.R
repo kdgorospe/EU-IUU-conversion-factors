@@ -32,6 +32,12 @@ source("R/combine_CF_datasets.R")
 
 cf_data_full <- combine_CF_datasets()
 
+# Shorten references
+cf_data_full <- cf_data_full %>%
+  mutate(reference = case_when(str_detect(reference, "EU Council") ~ "EU Council",
+                               str_detect(reference, "FAO") ~ "FAO",
+                               TRUE ~ reference))
+
 cf_data_no_commas <- cf_data_full %>%
   mutate_all(~str_remove_all(., pattern = ",")) 
 
@@ -74,6 +80,7 @@ cf_case_data <- cf_data_full %>%
   # order case studies data from largest to smallest range in cf values (use match function to get index from cf_case_studies$match_combo)
   arrange(match(match_combo, cf_case_studies$match_combo))
 
+
 # shapes:
 # 8 = asterisk
 # 1 = open circle
@@ -110,6 +117,33 @@ print(p)
 #ggsave(file.path(outdir, "case_studies_cf_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
 
 ############################################################################################################
+# Step 3A: If interested in source of CF values
+
+# shapes:
+# 21 - circle with border
+# 24 - triangle with border
+
+group.colors <- c("black", "red")
+group.fills <- c("royalblue1", "tan1", "gray")
+group.shapes <- c(24, 21)
+x_labels_as_numeric <- which(levels(cf_case_data$x_labels) %in% cf_case_data$x_labels) # if need to specify which countries get a dotted line
+
+p <- ggplot(data = cf_case_data, mapping = aes(x = x_labels, y = conversion_factor)) +
+  geom_point(mapping = aes(fill = continent_affiliation, color = reference, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", fill = "Affiliation", color = "Source", shape = "CF implementation") +
+  scale_fill_manual(values = group.fills) +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  # Next line is required due to a bug regarding scale_shape_manual: https://github.com/tidyverse/ggplot2/issues/2322
+  guides(fill = guide_legend(override.aes = list(shape = 21))) +
+  cf_range_theme +
+  coord_flip() 
+
+print(p)
+#ggsave(file.path(outdir, "case_studies_cf_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
+
+############################################################################################################
 # Step 4: Plot CF Values that match presentations reported in landings data
 
 eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
@@ -122,6 +156,11 @@ source("R/clean_landings.R")
 landings_main <- clean_landings("main")
 landings_presentation_list <- data.frame(Eurostat_Landings = sort(unique(landings_main$presentation)), bind_col = sort(unique(landings_main$presentation)))
 #unique(cf_case_data$landings_code)
+
+EU_cf_countries <- cf_data_full %>%
+  filter(reference == "EU Council")
+  
+
 eu_presentation_list <- EU_cf_countries %>%
   select(state, presentation) %>%
   unique() %>%
@@ -194,6 +233,32 @@ print(p)
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_2 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_for_landings_presentations_raw_data.csv"), quote = FALSE, row.names = FALSE)
 
+############################################################################################################
+# Step 4A: If interested in source of CF values
+
+# shapes:
+# 21 - circle with border
+# 24 - triangle with border
+
+group.colors <- c("black", "red")
+group.fills <- c("royalblue1", "tan1", "gray")
+group.shapes <- c(24, 21)
+x_labels_as_numeric <- which(levels(cf_case_data$x_labels) %in% cf_case_data$x_labels) # if need to specify which countries get a dotted line
+
+p <- ggplot(data = cf_case_data_2, mapping = aes(x = x_labels, y = conversion_factor)) +
+  geom_point(mapping = aes(fill = continent_affiliation, color = reference, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", fill = "Affiliation", color = "Source", shape = "CF implementation") +
+  scale_fill_manual(values = group.fills) +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  # Next line is required due to a bug regarding scale_shape_manual: https://github.com/tidyverse/ggplot2/issues/2322
+  guides(fill = guide_legend(override.aes = list(shape = 21))) +
+  cf_range_theme +
+  coord_flip() 
+
+print(p)
+#ggsave(file.path(outdir, "case_studies_cf_values_for_landings_presentations.png")) # PRINT to console and resize window within console to desired size before running ggsave
 
 ############################################################################################################
 # Step 5: Plot CF (national) values that match landings presentations AND also have a corresponding EU-wide value
@@ -231,9 +296,35 @@ print(p)
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_3 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data.csv"), quote = FALSE, row.names = FALSE)
 
+############################################################################################################
+# Step 5A: If interested in source of CF values
+
+# shapes:
+# 21 - circle with border
+# 24 - triangle with border
+
+group.colors <- c("black", "red")
+group.fills <- c("royalblue1", "tan1", "gray")
+group.shapes <- c(24, 21)
+x_labels_as_numeric <- which(levels(cf_case_data$x_labels) %in% cf_case_data$x_labels) # if need to specify which countries get a dotted line
+
+p <- ggplot(data = cf_case_data_3, mapping = aes(x = x_labels, y = conversion_factor)) +
+  geom_point(mapping = aes(fill = continent_affiliation, color = reference, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", fill = "Affiliation", color = "Source", shape = "CF implementation") +
+  scale_fill_manual(values = group.fills) +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  # Next line is required due to a bug regarding scale_shape_manual: https://github.com/tidyverse/ggplot2/issues/2322
+  guides(fill = guide_legend(override.aes = list(shape = 21))) +
+  cf_range_theme +
+  coord_flip() 
+
+print(p)
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
 
 ############################################################################################################
-# Step 4: Use landings data and CF values to back-calculate nominal catch
+# Step 6: Use landings data and CF values to back-calculate nominal catch
 # Use cf_case_data_3 as list of case studies (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
 
 #landings_case_studies <- unique(cf_case_data_3$x_labels)
@@ -273,7 +364,6 @@ eu_wide_cf <- cf_case_data_3 %>%
 
 # rbind landings_dat_list into a single dataset
 landings_dat <- rbindlist(landings_dat_list)
-rm(landings_dat)
 
 # retain only species + presentations in cf_cases
 landings_cases <- landings_dat %>%
@@ -293,6 +383,9 @@ landings_cases <- landings_dat %>%
   # Remove non-country vessels, no iso3c e.g., "European union", "European Free Trade Association"
   filter(is.na(vessel_iso3c)==FALSE) %>%
   select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, value, unit, use, year, reporting_entity, port_iso3c, port_iso2c)
+
+# Free up memory
+rm(landings_dat)
 
 # Change iso2c for United Kingdom (GB) to UK, which is what they use in the landings datafile labels
 cf_case_data_3 <- cf_case_data_3 %>%
@@ -375,8 +468,8 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
           legend.text = element_text(size = 12)) + 
     coord_flip()
   plot(p)
-  #pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
-  #ggsave(file = file.path(outdir, pngname))
+  pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
+  ggsave(file = file.path(outdir, pngname))
 }
 
 
