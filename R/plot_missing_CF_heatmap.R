@@ -92,6 +92,7 @@ eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FR
 # setdiff(all_countries, eu_codes)
 # "GBR" "ISL" "NOR" "RUS" "FRO" "GRL"
 
+# List of species + presentations (with associated nationality of vessel) being landed in the EU (i.e., found in the Eurostat Dataset):
 landings_availability <- landings_dat %>%
   mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
   select(scientific_name, presentation, nationality_of_vessel, iso3c) %>%
@@ -103,6 +104,7 @@ landings_availability <- landings_dat %>%
             n_countries = n()) %>%
   ungroup()
 
+# Number of CF values per species+presentation from EU Council Regulations Annex
 CF_availability <- cf_data_full %>%
   # ONLY KEEP THE EU COUNTRIES
   filter(iso3c %in% eu_codes) %>%
@@ -114,6 +116,13 @@ CF_availability <- cf_data_full %>%
   summarise(list_of_iso3c_CF = paste(iso3c, sep = ", ", collapse = ", "),
             n_CF = n()) %>%
   ungroup()
+
+CF_list <- paste(CF_availability$scientific_name, CF_availability$landings_code, sep = "_")
+landings_list <- paste(landings_availability$scientific_name, landings_availability$presentation, sep = "_")
+no_CF_list <- data.frame(no_CF_list = unique(landings_list[landings_list %in% CF_list == FALSE])) %>%
+  separate(col = "no_CF_list", into = c("presentation", "scientific_name"), sep = "_")
+write.csv(no_CF_list, file = file.path(outdir, "species_landed_but_no_CF_value.csv"), quote = FALSE, row.names = FALSE)
+
 
 heat_map_dat <- landings_availability %>%
   left_join(CF_availability, by = c("scientific_name", "presentation" = "landings_code")) %>%
@@ -193,7 +202,9 @@ top_50_heat_map <- heat_map_grid %>%
 
 p <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
   geom_raster() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_continuous(name = "CF data availability") +
+  labs(x = "Scientific name", y = "Presentation")
 
 print(p)
 ggsave(file = file.path(outdir, "CF_natonal_values_heat_map.png"))
@@ -217,12 +228,13 @@ CF_availability <- cf_data_full %>%
             EU_CF = case_when(n()>0 ~ "yes",
                               n()==0 ~ "no",
                               TRUE ~ "error")) %>%
-  ungroup()
+  ungroup() # should all be yes
 
+# join CF_availability back with landings data to determine which do not have CF values (i.e., the "no's")
 heat_map_dat <- landings_availability %>%
   left_join(CF_availability, by = c("scientific_name", "presentation" = "landings_code")) %>%
   # HERE NA's in n_CF are actually zeros - i.e., there are countries that catch this species + presentation but no countries have a CF value
-  mutate(EU_CF = replace_na(EU_CF, 0)) 
+  mutate(EU_CF = replace_na(EU_CF, "no")) 
 
 heat_map_grid <- expand.grid(scientific_name = unique(heat_map_dat$scientific_name), presentation = unique(heat_map_dat$presentation)) %>%
   left_join(heat_map_dat, by = c("scientific_name", "presentation")) %>%
@@ -255,7 +267,9 @@ top_50_heat_map <- heat_map_grid %>%
 
 p <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = EU_CF)) +
   geom_raster() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_discrete(name = "EU-wide CF value") +
+  labs(x = "Scientific name", y = "Presentation")
 
 print(p)
 ggsave(file = file.path(outdir, "CF_EU_values_yes_no.png"))

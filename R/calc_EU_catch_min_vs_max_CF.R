@@ -73,13 +73,21 @@ landings_dat <- landings_dat %>%
   filter(presentation %in% grouped_presentation_forms == FALSE) %>%
   filter(is.na(scientific_name)==FALSE)
 
+eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
+              "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
+              "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
+
+landings_dat <- landings_dat %>%
+  filter(scientific_name %in% species_list) %>%
+  mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
+  filter(iso3c %in% eu_codes)
+
 ############################################################################################################
 # Step 2: Pick a single species and calculate nominal catch (using minimum vs maximum CV value available across all countries, including EU-wide value) for each presentation
 # Combine as total catch
 # Present this as a time series
 
 # THREE CASE STUDIES: Cod, Hake, Monkfish
-# WHICH COUNTRIES TO USE? See landings case studies to focus on countries with large CF values
 
 # First get ALL EU-wide values
 eu_wide_cf_full <- cf_data_full %>%
@@ -94,8 +102,10 @@ cf_min_max <- cf_data_full %>%
             max_iso3c = paste(iso3c[conversion_factor == max_cf], sep = ", ", collapse = ", ") ) %>%
   ungroup()
 
-#species_i <- "Gadus morhua"
-species_i <- "Lophiidae"
+# Do this loop for all species %in% cod, hake, monkfish:
+#species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
+
+species_i <- "Merluccius merluccius"
 
 landings_all_pres <- landings_dat %>% 
   filter(scientific_name == species_i) %>%
@@ -156,6 +166,8 @@ p <- ggplot() +
 plot(p)
 pngname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_i, pattern = " ", replacement = "-"), ".png", sep = "")
 ggsave(file = file.path(outdir, pngname))  
+
+
   
   
 

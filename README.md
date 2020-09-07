@@ -10,7 +10,7 @@ How can live weight conversion factor practices be improved to accurately reflec
 
 # Data Documentation:
 # Sources:
-# Landings and Catch Data: https://ec.europa.eu/eurostat/data/database (Under Database by themes > Fisheries > Catches.... Or Landings)
+# Landings and Catch Data (1992 - 2018): https://ec.europa.eu/eurostat/data/database (Under Database by themes > Fisheries > Catches.... Or Landings)
 # Column names (e.g., species, pres, dest_use, etc): http://dd.eionet.europa.eu/vocabularies?expand=true&expanded=&folderId=15#folder-15
 # Key to data codes come from separate files found here: https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&dir=dic%2Fen
 
