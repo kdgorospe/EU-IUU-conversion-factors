@@ -2,62 +2,16 @@
 title: "Background Report"
 author: "Jessica Gephart"
 date: "7/13/2020"
-output: html_document
+output:
+  pdf_document: default
+  word_document: default
 ---
 
 ## Notes
 
+* <https://docs.google.com/document/d/1o2wUMDMseYWBAx70J8Kq6zYFJVtCsX-Vcl-XEuk3ZDE/edit?usp=sharing>
 * Q for Kelvin - did we pull the Norway, Greenland and Faroe Island values (they are separate here: <https://ec.europa.eu/fisheries/cfp/control/conversion_factors_en>)
 
-## Info from contract [remove from report]
-
-### Background
-
-The Environmental Justice Foundation, Oceana, The Nature Conservancy, The Pew Charitable Trusts and WWF are working together in a coalition (the ‘EU IUU Coalition’) to improve global fisheries governance and transparency to end illegal, unreported and unregulated (IUU) fishing. In order to stop IUU fishing, traceability and transparency of the seafood supply chain is key. Therefore, an important goal of the EU IUU Coalition’s work is to improve traceability and verification of the legality of seafood landed or imported into the European Union (EU). 
-
-The inconsistent use of conversion factors and presentation codes for processed fish, that are used to convert fish processed weight into fish live weight for the purpose of monitoring catches, has been identified as a weakness in seafood traceability systems, where it is suspected “missing landings” go unreported, at EU and at global level. 
-
-Conversion factors set at EU level
-Commission implementing regulation (EU) No 404/2011 establishes fresh and fresh salted EU conversion factors and presentation codes that are currently being used. The implementing regulation currently applies to fishery products on board or landed or transhipped by EU fishing vessels and by third country vessels fishing in EU waters.  However, this regulation will soon be revised following the revision of the EU’s fisheries Control Regulation. This presents an opportunity for the adoption of improved factors and codes, as well as improved measures and guidelines for their use. 
-
-Conversion factors set at Member State level
-In cases where no EU or regional conversion factors exist for a given species and presentation, the conversion factor adopted by the flag Member State applies. 
-
-Conversion factors set at RFMO level
-In situations where Regional Fisheries Management Organisations (RFMOs), of which the EU is a Contracting party or cooperating non Contracting party, or regions or coastal areas where the EU has an agreement to fish in third country waters, have defined regional conversion factors, these factors apply. 
-
-Conversion factors of imports from third countries outside RFMO areas
-The EU cannot require non-EU countries to use the conversion factors set by the EU, and imports into the EU (with the exception of species with a conversion factor at RFMO level) thus use the conversion factors of the vessel’s flag country, with the result that with regards to imported seafood, conversion factors used may vary even more widely. In the EU catch certificate accompanying imported seafood there are data fields for “Estimated live weight (net fish weight in kg)”; “Estimated live weight to be landed (net fish weight in kg)”; and “Verified weight landed (net weight in kg)”; however there is no data field indicating the conversion factors used in these calculations.
-
-### Purpose
-
-The purpose of the expert contract is to assist the EU IUU Coalition in raising awareness about conversion factors, explaining in simple terms the issues that could arise in back-calculating live weight with numerous conversion factors. The issue of conversion factors is not often discussed and this factsheet would serve to try to kick-start a public debate. Depending on the issues revealed, we would use the factsheet to push the European Commission to develop, adopt and/or require the use of harmonised conversion factors to ensure that the reported live weight of fish recorded on landing declarations accurately reflects the catches made on board fishing vessels. In addition, the factsheet would serve to highlight the difficulties of inspecting imports of non-RFMO species that could arrive in EU ports without information on the conversion factor used. 
-
-### Outputs and deliverables
-
-The expert will develop and deliver to the EU IUU Coalition a short background report and a 2-3-page factsheet, informed by the report: 
-
-1.	demonstrating how inconsistencies in how the live weight of fish is calculated leads to “missing landings” of processed seafood landed in the EU, i.e. a simple case study showing the difference between EU and Member State conversion factors and how this could impact catch estimates; 
-2.	demonstrating how a lack of information on third country conversion factors (non-RFMO species) could impact the back-calculation to live weight, i.e. a simple analysis could be undertaken for one key import species, showing the different conversion factors used in three key importing states;
-3.	identifying what the strengths and/or weaknesses are in the use of terminology “Estimated live weight (net fish weight in kg)”, “Estimated live weight to be landed (net fish weight in kg)” and “Verified weight landed (net weight in kg)” as data fields on the catch certificate for seafood imports; and
-4.	providing policy recommendations on the best way to estimate weights and potentially harmonise conversion factors so they accurately reflect catches made on board fishing vessels, to the greatest extent possible.
-
-### Audience
-
-The short background report, from which the factsheet is directly derived, will serve for the EU IUU Coalition internally to respond to follow-up queries on the factsheet from the target audience.
-
-### To do
-
-* Draft report due August 31, 2020
-* Week of August 24: Draft review between JG and KG
-* Week of August 17: Tentatively scheduled update with EJF team, have draft figures ready to present
-* Output 1: Summary of variation in CF values for a given species - presentation - preservation combo across different member and non-member states and EU-wide
-* Output 2: Identify a case-study where there is large CF-variation. Use EUROSTAT landings data to show range of live weight equivalent over time using different CF values
-* Week of August 3: Work on harmonization recommendations (JG); Create figures for case studies (KG)
-* Week of July 27: Select case studies, work on terminology recommendations
-* Week of July 20: All data entered (Have CF values entered into spreadsheet)
-
-Notes for interview: <https://docs.google.com/document/d/1o2wUMDMseYWBAx70J8Kq6zYFJVtCsX-Vcl-XEuk3ZDE/edit?usp=sharing>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -65,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Summary
 
+[Write at end]
 
 ## Introduction
 
@@ -79,22 +34,71 @@ Further, this assumption [connection to IUU]
 
 Following the FAO Coordinating Party on Fishery Statistics, within this report, the landed weight refers to the weight of product at the time of landing, regardless of the state (e.g., fresh or frozen) and presentation (e.g., whole, gutted, filleted, etc.), the product weight refers to the weight of a product at the time of weighing, and the nominal catch refers to the landings converted to a live weight basis (Ref: <http://www.fao.org/cwp-on-fishery-statistics/handbook/capture-fisheries-statistics/catch-and-landings/en/>). Since fishery products can be landed in diverse states and presentations, which dramatically alter the weight, catch statistics are reported as nominal weight in international statistics. In order to convert from landed weight to nominal weight, a live weight conversion factor must be applied. The conversion to nominal weight enables better catch comparison across space and time since it incorporates differences in state and presentation. At the same time, the application of live weight conversion factors can introduce error when the factors do not accurately represent processing losses. Additionally, nominal catch only represents the live weight equivalent of the fishery products landed and therefore cannot be used to directly evaluate the gross catch, which includes not only the retained catch, but also the discarded catch. 
 
-* EU catch certificate program
+The EU catch certificate program aims to improve catch reporting to ... [add goals of catch certificate program]. To improve the catch reporting, the Commission implementing regulation (EU) No 404/2011 outlines which live weight conversion factors should be used for catch landed in or exported to the EU. For landings by Regional Fisheries Management Organizations, of which the EU is a Contracting party or cooperating non-Contracting party, or in areas where the EU has an agreement to fish in third country waters, the conversion factors defined by the Regional Fisheries Management Organization or third-party nation apply. Otherwise, the conversion factors set by the EU are to be used when available. In cases where no EU or regional conversion factors exist for a given species and presentation, the conversion factor adopted by the flag Member State applies. Finally, imported seafood products are subject to a separate set of issues related to live weight conversion factors, stemming from both the different potential set of conversion factors and the fact that the EU cannot generally require non-EU countries to use the conversion factors set by the EU.
 
+* State the objective and key issues addressed in factsheet
 
-* State key issues addressed in factsheet
+## Methods
 
+### Data
 
-## EU Catch Certificate
+*Live weight conversion factors*
 
-Commission implementing regulation (EU) No 404/2011
+Live weight conversion factors for this analysis were compiled from three sources. First, the official EU-wide live weight conversion factors for fresh, salted, and frozen products were recorded from Regulation (EU) No 404/2011 Annexes XIII, XIV, and IV, respectively. Second, Member State live weight conversion factors were recorded from the European Commission's EU fishery control system Table 2 (<https://ec.europa.eu/fisheries/cfp/control/conversion_factors_en>). The Member State live weight conversion factors refer only to quota species. Therefore, we also included live weight conversion factor data from the Food and Agriculture Organization to expand the data coverage and to include values for non-EU countries.
+
+*Landings data*
+
+[Kelvin - please add description here]
+
+*Trade data*
+
+[Undecided]
+
+### Analysis
+
+Landed weight must be multiplied by the corresponding live weight conversion factor in order to estimate the pre-processing weight of the catch (i.e., the live weight equivalent). The live weight conversion factor can have a large impact on the estimated catch and it is therefore important that the landed weight be matched to the appropriate live weight conversion factor, based on the species, presentation and state of the landed product (Figure 1). 
+
+![Figure 1: Illustration of estimated live weight equivalent of catch for different presentations and ranges of live weight conversion factors](Images/LWE_calc_fig.png)
+
+The objective of the analysis is to illustrate the impact of different live weight conversion factors on calculated catch using case study examples. The case studies were selected to illustrate 1) the differences in the application of EU-wide versus Member State values and the range in values across the EU; 2) the differences in the application of EU versus non-EU conversion factors, and; 3) the additional challenges with the application of conversion factors to trade data. Case studies were selected on the basis of there being a wide range in the reported live weight conversion factors. Additionally, live weight conversion factors had to match available landings data for countries being compared.
+
+In the first step, we evaluated the ranges in live weight conversion factors and coverage of live weight conversion factors at the EU and Member State levels. To do this, we matched conversion factors by species, presentation and state. We then calculated the range in conversion factors for each species-presentation-state, in both absolute ($max-min$) and relative ($max/min$) terms [Kelvin- I think we should add the relative change too]. The absolute difference indicates the range in values that may be applied, while the relative difference indicates the potential extent of impact on the calculated catch. For example, take one product with conversion factors ranging from 3.0-4.5 and a second ranging from 1.0-2.0. The first has a wider range of live weight conversion factors (1.5 compared to 1.0) while the second has a larger relative difference (1.5 compared to 2.0). In this example, 100 tonnes of product would mean an estimated catch of 300-450 tonnes in the first case, but 100-200 tonnes in the second case. We then plotted these ranges, identifying within the plots which points represent EU-wide, EU Member State, and non-EU values. 
+
+Comparing catch estimates resulting from applying different live weight conversion factors requires not only a range of reported live weight conversion factors, but also that the live weight conversion factors are provided by the countries landing the product (not only for the species, but also the correct presentation and state). Therefore, we evaluated the coverage of conversion factors throughout the EU. To do this, we calculated the proportion of countries that report landings of a given product that also report a live weight conversion factor. We then also identify which products landed within the EU have an EU-wide conversion factor. 
+
+Once the conversion factor data were matched to landings data, we were able to identify candidate case studies based on the range of relevant conversion factors and the volume of landings. These selection criteria enable illustration of large differences in estimated catch volume based on real landings and alternate live weight conversion factor data. 
+
+[Describe trade analysis]
+
+## Live weight conversion factor ranges and data coverage
+
+[Discuss with Kelvin which figures to include here]
+
+Figure 2: Range of live weight conversion factors by species, state and presentation. Differentiation of EU-wide value, EU Member State value and non-EU Member State value
+
+* Describe the ranges
+* Describe the data coverage
+
+* Change over time
+* True variability in CFs due to differences in processing technology
+* General scarcity of data
 
 ## EU Member State Conversion Factors
 
 * Commission implementing regulation (EU) No 404/2011 relating to Member States
-* Summarize the range in CFs
 
-Figure 1: Range of live weight conversion factors by species, state and presentation. Differentiation of EU-wide value, EU Member State value and non-EU Member State value
+### Cod
+
+Figure 3: 
+
+### Hake
+
+Figure 4: 
+
+### Monkfish
+
+Figure 5: 
+
 
 ### Case study 1: EU Member State example
 
@@ -113,12 +117,9 @@ Figure 3: Use landed weight data to show variation in calculated live weight usi
 
 Figure 4: Range in CFs by HS code (probably for select illustrative codes)
 
-## Other Considerations
-
-* Change over time
-* True variability in CFs due to differences in processing technology
-
 ## Catch Statistic Terminology
+
+[Add in notes from email exchange]
 
 Eurostat, the statistical office of the European Union, houses the catch data within the Agriculture and fisheries division. Eurostat is a member organization of the Coordinating Working Party on Fishery Statistics (CWP) and therefore has adopted the CWP catch statistic concepts and definitions. Therefore, here we compare the terminoligy on the EU catch certificate to the CWP terminology. 
 
@@ -140,12 +141,15 @@ Check if estimated live weigh includes discards
 FIXIT: Check that these forms are the correct forms corresponding to the Commission implementing regulation (EU) No 404/2011
 
 ![Annex II European Union Catch Certificate and Re-Export Certificate Catch Weight Fields](Images/Annex II EU Catch Certificate Catch Fields.png)
+
 Figure _: Annex II European Union Catch Certificate and Re-Export Certificate catch weight fields
 
 ![Annex II European Union Catch Certificate and Re-Export Certificate Transhipment Weight Fields](Images/Annex II EU Catch Certificate Transhipment Fields.png)
+
 Figure _: Annex II European Union Catch Certificate and Re-Export Certificate transhipment weight fields
 
 ![Annex II European Union Catch Certificate and Re-Export Certificate Trade Weight Fields](Images/Annex II EU Catch Certificate Trade Fields.png)
+
 Figure _: Annex II European Union Catch Certificate and Re-Export Certificate trade weight fields
 
 States "The fish live weight shall be obtained by multiplying the fish processed weight by the conversion factors referred to in Article 49 of this Regulation for each species and presentation." but the term "fish processed weight" is not the same term used on the catch certificate.
@@ -159,3 +163,8 @@ States "The fish live weight shall be obtained by multiplying the fish processed
 * Need for EU-wide CF for all species/presentations -- there are cases where a country says to use the EU wide value for a species, but the EU does not provide a value for all states/presentations
 * Mismatch between landings data states and presentations. Need better definitions for the states and presentations. Not fully hierarchical, salted appears as a state and a presentation, and some states (e.g., cooked) don't appear on the state code list at all
 * 
+
+
+## Appendix
+
+
