@@ -391,6 +391,7 @@ rm(landings_dat)
 cf_case_data_3 <- cf_case_data_3 %>%
   mutate(iso2c = if_else(iso2c == "GB", true = "UK", false = iso2c)) 
 
+# Join landings and cf data, first filter year for 2016-2018; report max value out of those years:
 landings_case_study_tonnes <- landings_cases %>%
   filter(unit == "Tonnes product weight" & use == "Total") %>%
   # Other uses include: Human consumption, etc.
@@ -408,11 +409,13 @@ landings_case_study_tonnes <- landings_cases %>%
   left_join(eu_wide_cf, by = "x_labels") %>%
   # Some countries explicitly report 0
   filter(value != 0) %>%
+  # FIRST filter just 2016-2018
+  filter(year %in% c(2016, 2017, 2018)) %>%
   #group_by_at(setdiff(names(.), c("year", "value"))) %>%
   #group_by(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, conversion_factor, EU_CF) %>%
   group_by(x_labels, nationality_of_vessel) %>%
-  # Just keep the most recent year for each case study
-  filter(year == max(year)) %>%
+  # Just keep the max value for the available years (2016-2018)
+  filter(value == max(value)) %>%
   arrange(x_labels) %>%
   # Calculate catch
   mutate(catch_by_vessel_CF = value * vessel_CF,
@@ -423,7 +426,7 @@ landings_case_study_tonnes <- landings_cases %>%
          port_v_vessel_discrepancy = if_else(catch_by_port_CF != catch_by_vessel_CF, true = "yes", false = "no")) %>%
   # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
   ungroup() %>%
-  group_by(x_labels) %>%
+  group_by(x_labels, year) %>%
   mutate(n_discrepancy = sum(vessel_v_EU_discrepancy=="yes", na.rm = TRUE)) %>%
   filter(n_discrepancy > 0) %>%
   ungroup() %>%
@@ -434,7 +437,7 @@ write.csv(landings_case_study_tonnes %>% mutate_all(~str_remove_all(., pattern =
 # Pivot and clean for plotting
 case_study_plot <- landings_case_study_tonnes %>%
   # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
-  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, vessel_CF, port_CF, EU_CF, value, catch_by_vessel_CF, catch_by_EU_CF) %>%
+  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, vessel_CF, port_CF, EU_CF, year, value, catch_by_vessel_CF, catch_by_EU_CF) %>%
   rename(landings = value) %>%
     pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
   mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
@@ -442,7 +445,8 @@ case_study_plot <- landings_case_study_tonnes %>%
 
 for (i in 1:length(unique(case_study_plot$x_labels))){
   plot_i <- case_study_plot %>%
-    filter(x_labels == unique(case_study_plot$x_labels)[i]) #%>%
+    filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
+    filter(is.na(value)==FALSE)
   # To re-order groups:
     #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
   sciname_presentation <- unique(plot_i$x_labels)
@@ -469,6 +473,47 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
     coord_flip()
   plot(p)
   pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
+  ggsave(file = file.path(outdir, pngname))
+}
+
+
+### REDO certain plots but with certain countries removed:
+for (i in 1:length(unique(case_study_plot$x_labels))){
+  plot_i <- case_study_plot %>%
+    filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
+    filter(is.na(value)==FALSE) %>%
+    #filter(nationality_of_vessel != "Norway*")
+    #filter(nationality_of_vessel != "Belgium")
+    #filter(nationality_of_vessel != "Iceland*")
+    #filter(nationality_of_vessel %in% c("Norway*", "United Kingdom*")==FALSE)
+    #filter(nationality_of_vessel %in% c("Norway*", "Spain")==FALSE)
+    filter(nationality_of_vessel != "Spain")
+  # To re-order groups:
+  #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
+  sciname_presentation <- unique(plot_i$x_labels)
+  common_name <- unique(plot_i$common_name)
+  long_title <- paste(common_name, sciname_presentation, sep = "\n")
+  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = calculation)) +
+    geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+    labs(title = long_title, x = "Nationality of vessel", y = "Tonnes", fill = "") +
+    #scale_color_manual(values = group.colors) + 
+    #scale_shape_manual(values = group.shapes) +
+    scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                      breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                      labels = c("landings", "catch by national CF", "catch by EU CF")) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12)) + 
+    coord_flip()
+  plot(p)
+  pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, "_countries_removed.png", sep = "")
   ggsave(file = file.path(outdir, pngname))
 }
 
