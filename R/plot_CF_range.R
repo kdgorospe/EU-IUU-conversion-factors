@@ -34,8 +34,9 @@ cf_data_full <- combine_CF_datasets()
 
 # Shorten references
 cf_data_full <- cf_data_full %>%
-  mutate(reference = case_when(str_detect(reference, "EU Council") ~ "EU Council",
+  mutate(reference = case_when(str_detect(reference, "EU Council Regulations") ~ "EU Council",
                                str_detect(reference, "FAO") ~ "FAO",
+                               str_detect(reference, "Third Country") ~ "National Fisheries Authority",
                                TRUE ~ reference))
 
 cf_data_no_commas <- cf_data_full %>%
@@ -291,7 +292,7 @@ p <- ggplot(data = cf_case_data_3, mapping = aes(x = x_labels, y = conversion_fa
   coord_flip() 
 
 print(p)
-#ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png"))
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png"))
 
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_3 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data.csv"), quote = FALSE, row.names = FALSE)
@@ -303,7 +304,7 @@ write.csv(cf_case_data_3 %>% mutate_all(~str_remove_all(., pattern = ",")), file
 # 21 - circle with border
 # 24 - triangle with border
 
-group.colors <- c("black", "red")
+group.colors <- c("black", "red", "green")
 group.fills <- c("royalblue1", "tan1", "gray")
 group.shapes <- c(24, 21)
 x_labels_as_numeric <- which(levels(cf_case_data$x_labels) %in% cf_case_data$x_labels) # if need to specify which countries get a dotted line
@@ -321,10 +322,155 @@ p <- ggplot(data = cf_case_data_3, mapping = aes(x = x_labels, y = conversion_fa
   coord_flip() 
 
 print(p)
-ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
+#ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
 
 ############################################################################################################
-# Step 6: Use landings data and CF values to back-calculate nominal catch
+# Step 6: Expand plot of conversion factors that have either an EU national or EU-wide value (and plot all, not just the top 20)
+cf_data_eu_annex_all <- cf_data_possible %>% 
+  filter(eu_wide_available == 1) %>%
+  #slice_head(n=20) %>%
+  mutate(match_combo = paste(state, presentation, scientific_name, sep = ", "))
+
+cf_case_data_4 <- cf_data_full %>%
+  mutate(match_combo = paste(state, presentation, scientific_name, sep = ", ")) %>%
+  filter(match_combo %in% cf_data_eu_annex_all$match_combo) %>%
+  mutate(x_labels = paste(scientific_name, " (", paste(state, presentation, sep = ", "), ")", sep = "")) %>%
+  mutate(x_labels = as.factor(x_labels)) %>%
+  # Calculate relative values for a separate plot
+  group_by(scientific_name, landings_code) %>%
+  mutate(min_in_group = min(conversion_factor)) %>%
+  ungroup() %>%
+  mutate(cf_relative = conversion_factor / min_in_group) %>%
+  group_by(scientific_name, landings_code) %>%
+  mutate(max_cf_relative = max(cf_relative)) %>%
+  ungroup()
+
+# PLOT:
+x_labels_as_numeric <- which(levels(cf_case_data_4$x_labels) %in% cf_case_data_4$x_labels)
+group.colors <- c("royalblue1", "tan1", "green4")
+group.shapes <- c(17, 20)
+
+p <- ggplot(data = cf_case_data_4, mapping = aes(x = x_labels, y = conversion_factor)) +
+  geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 11),
+        axis.title = element_text(size = 24),
+        plot.title = element_text(size = 24, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 12)) +
+  coord_flip() 
+
+print(p)
+# Standard letter size paper:
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full.png"), width = 8.5, height = 11)
+
+# Provide raw data for EU IUU Coalition
+write.csv(cf_case_data_4 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data_FULL.csv"), quote = FALSE, row.names = FALSE)
+
+############################################################################################################
+# Step 6A: Now make CF values relative to the minimum value
+
+# PLOT:
+x_labels_as_numeric <- which(levels(cf_case_data_4$x_labels) %in% cf_case_data_4$x_labels)
+group.colors <- c("royalblue1", "tan1", "green4")
+group.shapes <- c(17, 20)
+
+p <- ggplot(data = cf_case_data_4, mapping = aes(x = x_labels, y = cf_relative)) +
+  geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 11),
+        axis.title = element_text(size = 24),
+        plot.title = element_text(size = 24, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 12)) +
+  coord_flip() 
+
+print(p)
+ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full.png"), width = 8.5, height = 11)
+
+# Step 6A: Reorder by range in CF values
+# cf_case_data_4 %>%
+#   mutate(x_labels = as.factor(x_labels)) %>%
+#   mutate(x_labels = fct_reorder(x_labels, max_cf_relative))
+
+p <- ggplot(cf_case_data_4 %>%
+              mutate(x_labels = as.factor(x_labels)) %>%
+              mutate(x_labels = fct_reorder(x_labels, max_cf_relative)), mapping = aes(x = x_labels, y = cf_relative)) +
+  geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 11),
+        axis.title = element_text(size = 24),
+        plot.title = element_text(size = 24, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 12)) +
+  coord_flip() 
+
+print(p)
+ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full_reordered.png"), width = 11, height = 13)
+
+tmp<- cf_case_data_4 %>% 
+  mutate(x_labels = as.factor(x_labels)) %>%
+  mutate(x_labels = fct_reorder(x_labels, max_cf_relative)) %>%
+  arrange(desc(max_cf_relative))
+
+# Top 50 goes to Coryphaenoides rupestris (Frozen, gutted)
+tmp %>% filter(x_labels == "Coryphaenoides rupestris (Frozen, gutted)")
+
+# Step 6B: If too much data to present just cut down to top 50?
+p <- ggplot(data = cf_case_data_4 %>% 
+              mutate(x_labels = as.factor(x_labels)) %>%
+              mutate(x_labels = fct_reorder(x_labels, max_cf_relative)) %>%
+              arrange(max_cf_relative) %>% filter(max_cf_relative >= 1.08), mapping = aes(x = x_labels, y = cf_relative)) +
+  geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 11),
+        axis.title = element_text(size = 24),
+        plot.title = element_text(size = 24, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 12)) +
+  coord_flip() 
+
+print(p)
+ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full_reordered_top50.png"), width = 8.5, height = 11)
+
+
+
+
+
+############################################################################################################
+# Step 7: Use landings data and CF values to back-calculate nominal catch
 # Use cf_case_data_3 as list of case studies (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
 
 #landings_case_studies <- unique(cf_case_data_3$x_labels)
