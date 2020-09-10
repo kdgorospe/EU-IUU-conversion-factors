@@ -7,12 +7,6 @@ output:
   word_document: default
 ---
 
-## Notes
-
-* <https://docs.google.com/document/d/1o2wUMDMseYWBAx70J8Kq6zYFJVtCsX-Vcl-XEuk3ZDE/edit?usp=sharing>
-* Q for Kelvin - did we pull the Norway, Greenland and Faroe Island values (they are separate here: <https://ec.europa.eu/fisheries/cfp/control/conversion_factors_en>)
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -62,7 +56,7 @@ Landed weight must be multiplied by the corresponding live weight conversion fac
 
 The objective of the analysis is to illustrate the impact of different live weight conversion factors on calculated catch using case study examples. The case studies were selected to illustrate 1) the differences in the application of EU-wide versus Member State values and the range in values across the EU; 2) the differences in the application of EU versus non-EU conversion factors, and; 3) the additional challenges with the application of conversion factors to trade data. Case studies were selected on the basis of there being a wide range in the reported live weight conversion factors. Additionally, live weight conversion factors had to match available landings data for countries being compared.
 
-In the first step, we evaluated the ranges in live weight conversion factors and coverage of live weight conversion factors at the EU and Member State levels. To do this, we matched conversion factors by species, presentation and state. We then calculated the range in conversion factors for each species-presentation-state, in both absolute ($max-min$) and relative ($max/min$) terms [Kelvin- I think we should add the relative change too]. The absolute difference indicates the range in values that may be applied, while the relative difference indicates the potential extent of impact on the calculated catch. For example, take one product with conversion factors ranging from 3.0-4.5 and a second ranging from 1.0-2.0. The first has a wider range of live weight conversion factors (1.5 compared to 1.0) while the second has a larger relative difference (1.5 compared to 2.0). In this example, 100 tonnes of product would mean an estimated catch of 300-450 tonnes in the first case, but 100-200 tonnes in the second case. We then plotted these ranges, identifying within the plots which points represent EU-wide, EU Member State, and non-EU values. 
+In the first step, we evaluated the ranges in live weight conversion factors and coverage of live weight conversion factors at the EU and Member State levels. To do this, we matched conversion factors by species, presentation and state. We then calculated the range in conversion factors for each species-presentation-state, in both absolute ($max-min$) and relative ($max/min$) terms. The absolute difference indicates the range in values that may be applied, while the relative difference indicates the potential extent of impact on the calculated catch. For example, take one product with conversion factors ranging from 3.0-4.5 and a second ranging from 1.0-2.0. The first has a wider range of live weight conversion factors (1.5 compared to 1.0) while the second has a larger relative difference (1.5 compared to 2.0). In this example, 100 tonnes of product would mean an estimated catch of 300-450 tonnes in the first case, but 100-200 tonnes in the second case. We then plotted these ranges, identifying within the plots which points represent EU-wide, EU Member State, and non-EU values. 
 
 Comparing catch estimates resulting from applying different live weight conversion factors requires not only a range of reported live weight conversion factors, but also that the live weight conversion factors are provided by the countries landing the product (not only for the species, but also the correct presentation and state). Therefore, we evaluated the coverage of conversion factors throughout the EU. To do this, we calculated the proportion of countries that report landings of a given product that also report a live weight conversion factor. We then also identify which products landed within the EU have an EU-wide conversion factor. 
 
@@ -72,46 +66,29 @@ Once the conversion factor data were matched to landings data, we were able to i
 
 ## Live weight conversion factor ranges and data coverage
 
-[Discuss with Kelvin which figures to include here]
-
 Figure 2: Range of live weight conversion factors by species, state and presentation. Differentiation of EU-wide value, EU Member State value and non-EU Member State value
 
 * Describe the ranges
 * Describe the data coverage
-
+* Discuss EU Member State vs non-Member State
 * Change over time
 * True variability in CFs due to differences in processing technology
 * General scarcity of data
 
-## EU Member State Conversion Factors
+## EU Fishery Case Studies
 
-* Commission implementing regulation (EU) No 404/2011 relating to Member States
+### Cod Case Study
 
-### Cod
+Figure 3: Use landed weight data to show variation in calculated live weight using different CF's for EU value compared to Member State(s)
 
-Figure 3: 
+### Hake Case Study
 
-### Hake
+Figure 4: Use landed weight data to show variation in calculated live weight using different CF's for EU value compared to Member State(s)
 
-Figure 4: 
+### Monkfish Case Study
 
-### Monkfish
+Figure 5: Use landed weight data to show variation in calculated live weight using different CF's for EU value compared to Member State(s)
 
-Figure 5: 
-
-
-### Case study 1: EU Member State example
-
-Figure 2: Use landed weight data to show variation in calculated live weight using different CF's for EU value compared to Member State(s)
-
-## Non-EU Member State Conversion Factors
-
-* Commission implementing regulation (EU) No 404/2011 relating to non-Member States
-* Summarize the range in CFs
-
-### Case study 2: EU-non-member comparison
-
-Figure 3: Use landed weight data to show variation in calculated live weight using different CF's for member and non-member States
 
 ## Trade Code Alignment with Conversion Factors
 
