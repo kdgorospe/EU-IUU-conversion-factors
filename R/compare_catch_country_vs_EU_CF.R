@@ -47,7 +47,7 @@ cf_data_full <- combine_CF_datasets()
 
 # FIX IT - for now, limiting to CF values from EU Council Regulations Annex:
 cf_data_full <- cf_data_full %>%
-  filter(reference == "EU Council Regulations Annex")
+  filter(reference %in% c("EU Council Regulations Annex", "EU Council Website Third Country Info"))
 
 source("R/clean_landings.R")
 # Note: although there is a "main" landings dataset this only reports TOTALS, need to go to each individual country's landings data in order to get nationality of vessels

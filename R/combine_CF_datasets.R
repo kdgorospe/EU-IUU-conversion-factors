@@ -6,6 +6,11 @@ combine_CF_datasets <- function(){
 
 # Start with EU Commission's seafood conversion factors data, Table 2 from here: https://ec.europa.eu/fisheries/cfp/control/conversion_factors_en
 EU_cf <- read.csv(file.path(datadir, "EU_nation_CF_2020-08-10.csv"))
+third_party_cf <- read.csv(file.path(datadir, "CF-values_GRL-NOR-FRO_cod-hake-monk_2020-09-08.csv"))
+# full product presentation description is given in the notes since these are third party countries (i.e., do not use official EU codes for presentations)
+
+EU_cf <- EU_cf %>%
+  bind_rows(third_party_cf)
 
 EU_cf_clean <- EU_cf %>%
   rename(conversion_factor = factor) %>%
@@ -217,11 +222,11 @@ cf_data_full <- cf_data_countries %>%
   arrange(scientific_name, state, presentation, conversion_factor, country) %>%
   select(scientific_name, state, presentation, landings_code, conversion_factor, country, iso3c, iso2c, continent_affiliation, implementation, note, reference) 
 
-# If multiple CF values for same country + species + state + presentation, keep only EU Annex version
+# If multiple CF values for same country + species + state + presentation, keep only "EU Annex" or "EU Council Website Third Country" version
 cf_data_full <- cf_data_full %>%
   group_by(scientific_name, landings_code, iso3c) %>%
   mutate(n_CF = n()) %>%
-  filter(n_CF == 1 | reference == "EU Council Regulations Annex") %>%
+  filter(n_CF == 1 | reference %in% c("EU Council Regulations Annex", "EU Council Website Third Country Info")) %>%
   ungroup()
 
 return(cf_data_full)
