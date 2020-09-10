@@ -3,4 +3,4 @@
 .RData
 .Ruserdata
 Outputs/
-.DS_Store
+*.DS_Store
