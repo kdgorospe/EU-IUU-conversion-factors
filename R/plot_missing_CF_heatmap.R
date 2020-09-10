@@ -45,9 +45,11 @@ source("R/combine_CF_datasets.R")
 cf_data_full <- combine_CF_datasets()
 # Ignore warning message about EU; iso3c and iso2c is set to "EU" manually within the function
 
-# FIX IT - for now, limiting to CF values from EU Council Regulations Annex:
+# FIX IT - for now, limiting to CF values from EU Council Regulations Annex, and doing the same with landings data
+# Note: not including Greenland, Norway, and Faroe Islands because so far our CF spreadsheets for those countries are incomplete (only including cod, hake, monkfish)
 cf_data_full <- cf_data_full %>%
   filter(reference == "EU Council Regulations Annex")
+
 
 source("R/clean_landings.R")
 # Note: although there is a "main" landings dataset this only reports TOTALS, need to go to each individual country's landings data in order to get nationality of vessels
@@ -97,7 +99,7 @@ landings_availability <- landings_dat %>%
   mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
   select(scientific_name, presentation, nationality_of_vessel, iso3c) %>%
   unique() %>%
-  # ONLY KEEP THE EU COUNTRIES
+  # ONLY KEEP VESSELS FROM THE EU COUNTRIES
   filter(iso3c %in% eu_codes) %>%
   group_by(scientific_name, presentation) %>%
   summarise(list_of_iso3c_landing = paste(iso3c, sep = ", ", collapse = ", "),
@@ -117,11 +119,6 @@ CF_availability <- cf_data_full %>%
             n_CF = n()) %>%
   ungroup()
 
-CF_list <- paste(CF_availability$scientific_name, CF_availability$landings_code, sep = "_")
-landings_list <- paste(landings_availability$scientific_name, landings_availability$presentation, sep = "_")
-no_CF_list <- data.frame(no_CF_list = unique(landings_list[landings_list %in% CF_list == FALSE])) %>%
-  separate(col = "no_CF_list", into = c("presentation", "scientific_name"), sep = "_")
-write.csv(no_CF_list, file = file.path(outdir, "species_landed_but_no_CF_value.csv"), quote = FALSE, row.names = FALSE)
 
 
 heat_map_dat <- landings_availability %>%
@@ -217,7 +214,7 @@ ggsave(file = file.path(outdir, "CF_natonal_values_heat_map.png"))
 
 # redo CF_availability
 CF_availability <- cf_data_full %>%
-  # ONLY KEEP THE EU COUNTRIES
+  # ONLY KEEP THE EU-WIDE
   filter(iso3c == "EU") %>%
   # ONLY KEEP THE EU Council Regulations Annex values
   filter(reference == "EU Council Regulations Annex") %>%
@@ -273,3 +270,25 @@ p <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, f
 
 print(p)
 ggsave(file = file.path(outdir, "CF_EU_values_yes_no.png"))
+
+
+############################################################################################################
+# Step 3: Create list of species, presentations currently landed by an EU vessel but with no CF value (no EU-wide and no national-level value)
+
+# keep same landings_availability as above
+
+# redo CF_availability
+CF_availability <- cf_data_full %>%
+  # KEEP both EU and EU-wide values
+  filter(iso3c %in% c(eu_codes, "EU")) %>%
+  # ONLY KEEP THE EU Council Regulations Annex values
+  filter(reference == "EU Council Regulations Annex") %>%
+  select(scientific_name, landings_code, country, iso3c) %>%
+  unique() 
+
+
+CF_list <- paste(CF_availability$scientific_name, CF_availability$landings_code, sep = "_")
+landings_list <- paste(landings_availability$scientific_name, landings_availability$presentation, sep = "_")
+no_CF_list <- data.frame(no_CF_list = unique(landings_list[landings_list %in% CF_list == FALSE])) %>%
+  separate(col = "no_CF_list", into = c("presentation", "scientific_name"), sep = "_")
+write.csv(no_CF_list, file = file.path(outdir, "species_landed_but_no_CF_value.csv"), quote = FALSE, row.names = FALSE)

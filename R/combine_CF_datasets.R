@@ -223,6 +223,7 @@ cf_data_full <- cf_data_countries %>%
   select(scientific_name, state, presentation, landings_code, conversion_factor, country, iso3c, iso2c, continent_affiliation, implementation, note, reference) 
 
 # If multiple CF values for same country + species + state + presentation, keep only "EU Annex" or "EU Council Website Third Country" version
+#
 cf_data_full <- cf_data_full %>%
   group_by(scientific_name, landings_code, iso3c) %>%
   mutate(n_CF = n()) %>%

@@ -47,7 +47,15 @@ cf_data_full <- combine_CF_datasets()
 
 # FIX IT - for now, limiting to CF values from EU Council Regulations Annex:
 cf_data_full <- cf_data_full %>%
-  filter(reference %in% c("EU Council Regulations Annex", "EU Council Website Third Country Info"))
+  filter(reference %in% c("EU Council Regulations Annex", "EU Council Website Third Country Info")) %>%
+  ## JUST for this analysis, need to calculate average of CF values (Norway has multiple values for gutted and headed cod and hake)
+  group_by(scientific_name, landings_code, country) %>%
+  mutate(conversion_factor_final = mean(conversion_factor)) %>%
+  ungroup() %>%
+  select(-c(conversion_factor, note)) %>%
+  unique() %>%
+  rename(conversion_factor = conversion_factor_final)
+
 
 source("R/clean_landings.R")
 # Note: although there is a "main" landings dataset this only reports TOTALS, need to go to each individual country's landings data in order to get nationality of vessels
@@ -66,6 +74,9 @@ landings_dat <- rbindlist(landings_dat)
 # filter these out
 grouped_presentation_forms <- c("All presentation forms", "Dried", "Fresh", "Frozen", "Salted")
 
+# Do this loop for all species %in% cod, hake, monkfish:
+species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
+
 # Clean for landings data only:
 landings_dat <- landings_dat %>%
   mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel)) %>%
@@ -75,9 +86,9 @@ landings_dat <- landings_dat %>%
   filter(presentation %in% grouped_presentation_forms == FALSE) %>%
   filter(is.na(scientific_name)==FALSE)
 
-
+#### NOTE - adding NORWAY To this analysis (they have Cod and Hake CF values relevant here)
 eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
-              "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
+              "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "NOR",
               "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
 
 landings_dat <- landings_dat %>%
@@ -96,11 +107,9 @@ landings_dat <- landings_dat %>%
 eu_wide_cf_full <- cf_data_full %>%
   filter(iso3c == "EU")
 
-# Do this loop for all nationality_of_vessel %in% EU countries and for species %in% cod, hake, monkfish:
-species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
-
 country_list <- sort(unique(landings_dat$nationality_of_vessel))
 
+# Do this loop for all nationality_of_vessel %in% EU countries and for species %in% cod, hake, monkfish:
 for(i in 1:length(country_list)){
   for(j in 1:length(species_list)){
     # FIX IT - clean up code; a lot of this is unnecessary plotting
@@ -159,10 +168,10 @@ for(i in 1:length(country_list)){
     # print(p)
     
     # Plot landings per presentation type and sum nominal catch for all presentation types (landing presentations with no CF value are still displayed but not part of the total nominal catch)
-    total_catch_national_CF <- landings_with_national_CF %>% 
-      group_by(year, catch_vs_unaccounted) %>%
-      summarize(total_catch = sum(catch_by_national_CF)) %>%
-      filter(catch_vs_unaccounted != "unaccounted")
+    # total_catch_national_CF <- landings_with_national_CF %>% 
+    #   group_by(year, catch_vs_unaccounted) %>%
+    #   summarize(total_catch = sum(catch_by_national_CF)) %>%
+    #   filter(catch_vs_unaccounted != "unaccounted")
     
     # p <- ggplot() +
     #   geom_line(data = landings_with_national_CF, aes(x = year, y = landings, color = presentation_national)) +
@@ -192,10 +201,10 @@ for(i in 1:length(country_list)){
     
     # Plot landings per presentation type and sum nominal catch for all presentation types using EU-wide CF
     #(landing presentations with no CF value are still displayed but not part of the total nominal catch)
-    total_catch_EU_wide_CF <- landings_with_EU_wide_CF %>% 
-      group_by(year, catch_vs_unaccounted) %>%
-      summarize(total_catch = sum(catch_by_EU_wide_CF)) %>%
-      filter(catch_vs_unaccounted != "unaccounted")
+    # total_catch_EU_wide_CF <- landings_with_EU_wide_CF %>% 
+    #   group_by(year, catch_vs_unaccounted) %>%
+    #   summarize(total_catch = sum(catch_by_EU_wide_CF)) %>%
+    #   filter(catch_vs_unaccounted != "unaccounted")
     
     # p <- ggplot() +
     #   geom_line(data = landings_with_EU_wide_CF, aes(x = year, y = landings, color = presentation_EU_wide)) +
@@ -248,8 +257,9 @@ for(i in 1:length(country_list)){
       p <- ggplot() +
         # Just the landings (no catch calculation)
         geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
-        geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch), linetype = "dotted", size = size_for_common_lines) +
-        geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch), linetype = "dashed", size = size_for_common_lines) +
+        geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch, linetype = "dotted"), size = size_for_common_lines) +
+        geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch, linetype = "dashed"), size = size_for_common_lines) +
+        scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
         theme_classic() + 
         theme(axis.text.x = element_text(size = 12),
               axis.text.y = element_text(size = 12),

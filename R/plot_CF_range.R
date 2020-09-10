@@ -98,8 +98,8 @@ cf_range_theme <- theme_classic() +
         legend.position = "bottom",
         legend.box = "vertical",
         legend.box.just = "left",
-        legend.title = element_text(size = 20),
-        legend.text = element_text(size = 16))
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 12))
 
 group.colors <- c("royalblue1", "tan1", "gray")
 group.shapes <- c(17, 20)
@@ -292,7 +292,7 @@ p <- ggplot(data = cf_case_data_3, mapping = aes(x = x_labels, y = conversion_fa
   coord_flip() 
 
 print(p)
-ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png"))
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png"), width = 11, height = 8.5)
 
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_3 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data.csv"), quote = FALSE, row.names = FALSE)
@@ -322,7 +322,7 @@ p <- ggplot(data = cf_case_data_3, mapping = aes(x = x_labels, y = conversion_fa
   coord_flip() 
 
 print(p)
-#ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values.png")) # PRINT to console and resize window within console to desired size before running ggsave
+#ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_with_sources.png"), width = 11, height = 8.5) # PRINT to console and resize window within console to desired size before running ggsave
 
 ############################################################################################################
 # Step 6: Expand plot of conversion factors that have either an EU national or EU-wide value (and plot all, not just the top 20)
@@ -576,29 +576,36 @@ landings_case_study_tonnes <- landings_cases %>%
   mutate(n_discrepancy = sum(vessel_v_EU_discrepancy=="yes", na.rm = TRUE)) %>%
   filter(n_discrepancy > 0) %>%
   ungroup() %>%
-  select(-c("vessel_v_EU_discrepancy", "port_v_EU_discrepancy", "port_v_vessel_discrepancy", "n_discrepancy"))
+  select(-c("vessel_v_EU_discrepancy", "port_v_EU_discrepancy", "port_v_vessel_discrepancy", "n_discrepancy", "catch_by_port_CF", "port_iso3c", "port_iso2c", "port_CF")) %>%
+  unique() # Do unique to get rid of duplicates from port CF calculations
 
 write.csv(landings_case_study_tonnes %>% mutate_all(~str_remove_all(., pattern = ",")) , file = file.path(outdir, "landings_case_studies_raw_data.csv"), row.names = FALSE, quote = FALSE)
 
 # Pivot and clean for plotting
 case_study_plot <- landings_case_study_tonnes %>%
   # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
-  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, port_iso3c, port_iso2c, vessel_CF, port_CF, EU_CF, year, value, catch_by_vessel_CF, catch_by_EU_CF) %>%
+  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, year, value, catch_by_vessel_CF, catch_by_EU_CF) %>% # For now remove vessel_CF, EU_CF, for cleaner output due to multiple CF values in Norway
   rename(landings = value) %>%
     pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
   mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
-  mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel))
+  mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel)) %>%
+  unique() %>%
+  arrange(x_labels, calculation) %>%
+  group_by(x_labels, nationality_of_vessel) %>%
+  mutate(index_to_plot_all_values = as.character(row_number())) %>%
+  ungroup()
 
 for (i in 1:length(unique(case_study_plot$x_labels))){
   plot_i <- case_study_plot %>%
     filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
-    filter(is.na(value)==FALSE)
+    filter(is.na(value)==FALSE) %>%
+    filter(nationality_of_vessel=="Norway*")
   # To re-order groups:
     #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
   sciname_presentation <- unique(plot_i$x_labels)
   common_name <- unique(plot_i$common_name)
   long_title <- paste(common_name, sciname_presentation, sep = "\n")
-  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = calculation)) +
+  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
     geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
     labs(title = long_title, x = "Nationality of vessel", y = "Tonnes", fill = "") +
     #scale_color_manual(values = group.colors) + 
@@ -620,6 +627,7 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
   plot(p)
   pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
   ggsave(file = file.path(outdir, pngname))
+  #ggsave(file = file.path(outdir, "landings_vs_catch_case_study_4_Gadus morhua (Fresh, gutted and headed)-JustNorway.png"))
 }
 
 
@@ -663,6 +671,8 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
   ggsave(file = file.path(outdir, pngname))
 }
 
+
+### NO LONGER DOING MONETARY VALUE ANALYSIS BELOW:
 
 ############################################################################################################
 # Step 5: Same as Step 4, but plot monetary value: Use cf_case_data_3 (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)

@@ -45,7 +45,7 @@ cf_data_full <- combine_CF_datasets()
 
 # FIX IT - for now, limiting to CF values from EU Council Regulations Annex:
 cf_data_full <- cf_data_full %>%
-  filter(reference == "EU Council Regulations Annex")
+  filter(reference %in% c("EU Council Regulations Annex", "EU Council Website Third Country Info"))
 
 source("R/clean_landings.R")
 # Note: although there is a "main" landings dataset this only reports TOTALS, need to go to each individual country's landings data in order to get nationality of vessels
@@ -73,6 +73,8 @@ landings_dat <- landings_dat %>%
   filter(presentation %in% grouped_presentation_forms == FALSE) %>%
   filter(is.na(scientific_name)==FALSE)
 
+
+#### NOTE - adding NORWAY To this analysis (they have Cod and Hake CF values relevant here)
 eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
               "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
               "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
@@ -103,69 +105,86 @@ cf_min_max <- cf_data_full %>%
   ungroup()
 
 # Do this loop for all species %in% cod, hake, monkfish:
-#species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
+species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
 
-species_i <- "Merluccius merluccius"
-
-landings_all_pres <- landings_dat %>% 
-  filter(scientific_name == species_i) %>%
-  mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
-  # Get species, presentation, and country-specific CF values
-  left_join(cf_min_max, by = c("presentation" = "landings_code", "scientific_name")) %>%
-  mutate(catch_min_cf = value * min_cf,
-         catch_max_cf = value * max_cf) %>%
-  # Sum across all vessels and reporting entities (group by year for time series)
-  group_by(common_name, scientific_name, presentation, year, min_cf, max_cf, min_iso3c, max_iso3c) %>%
-  summarise(year_catch_min = sum(catch_min_cf),
-            year_catch_max = sum(catch_max_cf),
-            year_landings = sum(value)) %>%
-  ungroup()
-
-# Plot minimum catch by presentation
-p <- ggplot(data = landings_all_pres, aes(x = year, y = year_catch_min, group = presentation)) +
-  geom_line(aes(color = presentation))
-print(p)
-
-# Plot maximum catch by presentation
-p <- ggplot(data = landings_all_pres, aes(x = year, y = year_catch_max, group = presentation)) +
-  geom_line(aes(color = presentation))
-print(p)
-
-# Plot min catch, max catch, and landings:
-p <- ggplot(data = landings_all_pres) + 
-  geom_line(aes(x = year, y = year_catch_min, color = presentation), linetype = "dashed") + 
-  geom_line(aes(x = year, y = year_catch_max, color = presentation), linetype = "dashed") +
-  geom_line(aes(x = year, y = year_landings, color = presentation))
-print(p)
-
-# For reference: get all presentations that don't have a CF value
-pres_no_cf <- landings_all_pres %>%
-  filter(is.na(min_cf)) %>%
-  pull(presentation) %>%
-  unique()
-
-# Sum all landings presentations that don't have a CF value
-landings_no_cf <- landings_all_pres %>%
-  filter(is.na(min_cf)) %>%
-  group_by(year) %>%
-  summarise(year_landings_no_cf = sum(year_landings)) %>%
-  ungroup()
-
-landings_sum_pres <- landings_all_pres %>%
-  filter(is.na(min_cf)==FALSE) %>%
-  group_by(year) %>%
-  summarise(year_total_catch_min = sum(year_catch_min),
-            year_total_catch_max = sum(year_catch_max)) %>%
-  ungroup
-
-p <- ggplot() +
-  geom_line(data = landings_no_cf, aes(x = year, y = year_landings_no_cf)) +
-  geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_min), linetype = "dashed") +
-  geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_max), linetype = "dashed")
-
-plot(p)
-pngname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_i, pattern = " ", replacement = "-"), ".png", sep = "")
-ggsave(file = file.path(outdir, pngname))  
+for (i in 1:length(species_list)){
+  
+  landings_all_pres <- landings_dat %>% 
+    filter(scientific_name == species_list[i]) %>%
+    mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
+    # Get species, presentation, and country-specific CF values
+    left_join(cf_min_max, by = c("presentation" = "landings_code", "scientific_name")) %>%
+    mutate(catch_min_cf = value * min_cf,
+           catch_max_cf = value * max_cf) %>%
+    # Sum across all vessels and reporting entities (group by year for time series)
+    group_by(common_name, scientific_name, presentation, year, min_cf, max_cf, min_iso3c, max_iso3c) %>%
+    summarise(year_catch_min = sum(catch_min_cf),
+              year_catch_max = sum(catch_max_cf),
+              year_landings = sum(value)) %>%
+    ungroup()
+  
+  
+  
+  # # Plot minimum catch by presentation
+  # p <- ggplot(data = landings_all_pres, aes(x = year, y = year_catch_min, group = presentation)) +
+  #   geom_line(aes(color = presentation))
+  # print(p)
+  
+  # # Plot maximum catch by presentation
+  # p <- ggplot(data = landings_all_pres, aes(x = year, y = year_catch_max, group = presentation)) +
+  #   geom_line(aes(color = presentation))
+  # print(p)
+  
+  # Plot min catch, max catch, and landings:
+  # p <- ggplot(data = landings_all_pres) + 
+  #   geom_line(aes(x = year, y = year_catch_min, color = presentation), linetype = "dashed") + 
+  #   geom_line(aes(x = year, y = year_catch_max, color = presentation), linetype = "dashed") +
+  #   geom_line(aes(x = year, y = year_landings, color = presentation))
+  # print(p)
+  
+  # For reference: get all presentations that don't have a CF value
+  pres_no_cf <- landings_all_pres %>%
+    filter(is.na(min_cf)) %>%
+    pull(presentation) %>%
+    unique()
+  
+  # Sum all landings presentations that don't have a CF value
+  landings_no_cf <- landings_all_pres %>%
+    filter(is.na(min_cf)) %>%
+    group_by(year) %>%
+    summarise(year_landings_no_cf = sum(year_landings)) %>%
+    ungroup()
+  
+  landings_sum_pres <- landings_all_pres %>%
+    filter(is.na(min_cf)==FALSE) %>%
+    group_by(year) %>%
+    summarise(year_total_catch_min = sum(year_catch_min),
+              year_total_catch_max = sum(year_catch_max)) %>%
+    ungroup
+  
+  p <- ggplot() +
+    geom_line(data = landings_all_pres %>% filter(is.na(min_cf)==FALSE), aes(x = year, y = year_landings, color = presentation)) +
+    geom_line(data = landings_no_cf, aes(x = year, y = year_landings_no_cf)) +
+    geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_min, linetype = "solid")) +
+    geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_max, linetype = "solid")) +
+    scale_linetype_manual(name = "summed catch", values = c("solid"), labels = c("by minimum and maximum CF value")) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12)) 
+  
+  
+  plot(p)
+  pngname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_list[i], pattern = " ", replacement = "-"), ".png", sep = "")
+  ggsave(file = file.path(outdir, pngname), width = 9, height = 7)  
+  
+}
 
 
   
