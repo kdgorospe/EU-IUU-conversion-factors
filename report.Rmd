@@ -48,7 +48,7 @@ Landing quantities also report various states (e.g., Fresh, Salted, Dried, etc.)
 
 *Trade data*
 
-[I took a stab at this] For the trade case study, we use the United Nations' Comtrade BACI data (a standardized international trade database) to provide an example of how the variability in conversion factors is exacerbated when dealing with internationally traded products. We focus on the import of frozen mackerel from South Korea into the European Union. This product is officially catalogued in the Harmonized Commodity Description and Coding System (HS) as HS code 030354. All products with this code number fall under the description "frozen, mackerel (scomber scombrus, scomber australasicus, scomber japonicus), excluding fillets, livers, roes, and other fish meat." The problem of different countries having different conversion factors for a given species product form, is compounded by the fact that the HS codes by which internationally traded products are reported also contain multiple species. Products entering the European Eunion with HS code 030354 therefore may be matched to different conversion factors based not only on country variability but also species variability. 
+For the trade case study, we use the United Nations' Comtrade BACI data (a standardized international trade database) to provide an example of how the variability in conversion factors is exacerbated when dealing with internationally traded products. We focus on the import of frozen mackerel from South Korea into the European Union. This product is officially catalogued in the Harmonized Commodity Description and Coding System (HS) as HS code 030354. All products with this code number fall under the description "frozen, mackerel (scomber scombrus, scomber australasicus, scomber japonicus), excluding fillets, livers, roes, and other fish meat." The problem of different countries having different conversion factors for a given species product form, is compounded by the fact that the HS codes by which internationally traded products are reported also contain multiple species. Products entering the European Eunion with HS code 030354 therefore may be matched to different conversion factors based not only on country variability but also species variability. 
 
 ### Analysis
 
@@ -68,49 +68,21 @@ Once the conversion factor data were matched to landings data, we were able to i
 
 ## Live weight conversion factor ranges and data coverage
 
-<<<<<<< HEAD
-Figure 2: Range of live weight conversion factors by species, state and presentation. Differentiation of EU-wide value, EU Member State value and non-EU Member State value
-=======
-[Discuss with Kelvin which figures to include here - If it can fit on a single page, I think we should include the full figure of all conversion factors based on relative ranges. If this doesn't fit (or if the text is too small), we can just report the top 100 or whatever can fit, and include a note saying that we are also providing them with the raw data as a CSV file. I decided to remove the "source" (i.e., FAO vs European Commission vs Third Country Info) from the plots but I can add it back in if you think it's important. ]
-
-We draw from our database of conversion factors from FA
-
-
-Figure 2: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)
->>>>>>> e0113d6c533bda22326f4f546893d1915afd142d
-
 * Describe the ranges
 * Describe the data coverage
 * Discuss EU Member State vs non-Member State
-* Change over time
-* True variability in CFs due to differences in processing technology
-* General scarcity of data
 
-<<<<<<< HEAD
-## EU Fishery Case Studies
-=======
-## Data Availability:
+![Figure 2: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Fig2.png)
+
+[Factors influenging variability: changes over time and real variability with differences in processing technologies]
+
 When considering just the official conversion factors implemented by the European Commission's Regulation (EU) No 404/2011 for EU-wide and Member State fisheries products, and merge this with all products landed by fishing vessels from the 27 EU countries, we see considerable data gaps that hinder our (and the EU's) ability to calculate nominal match for these landed products. 
 
-Figure 3: Grid showing the top 50 species by landed weight in the EU (accounts for 87.1 % of total landings from 1992 - 2018). Gray areas are species, states, and presentations that are not landed.  
-(A) Shaded blue areas represent the proportion of all countries that reportedly landed a species, state, and presentation (i.e., product) that also have a national-level conversion factor for that product. (B) Green areas represent products that have an EU-wide level conversior factor. Pink areas represent products that have no EU-wide level conversion factor.
 
-## EU Member State Conversion Factors
+Figure 3: Grid showing the top 50 species by landed weight in the EU (accounts for 87.1 % of total landings from 1992 - 2018). Gray areas are species, states, and presentations that are not landed. (A) Shaded blue areas represent the proportion of all countries that reportedly landed a species, state, and presentation (i.e., product) that also have a national-level conversion factor for that product. (B) Green areas represent products that have an EU-wide level conversior factor. Pink areas represent products that have no EU-wide level conversion factor.
 
-* Commission implementing regulation (EU) No 404/2011 relating to Member States
 
-### Cod
-
-Figure X: 
-
-### Hake
-
-Figure X: 
-
-### Monkfish
-
-Figure X: 
->>>>>>> e0113d6c533bda22326f4f546893d1915afd142d
+## EU Fishery Case Studies
 
 ### Cod Case Study
 
@@ -125,9 +97,15 @@ Figure 4: Use landed weight data to show variation in calculated live weight usi
 Figure 5: Use landed weight data to show variation in calculated live weight using different CF's for EU value compared to Member State(s)
 
 
-## Trade Code Alignment with Conversion Factors
+## Live weight equivalents for traded seafood
 
-Figure 4: Range in CFs by HS code (probably for select illustrative codes)
+Estimating the live weight equivalent of catch from trade data is important for calculating the apparent consumption of seafood in a country and for monitoring the effects of implemented trade policies on foreign nations. While the above sections detail the uncertainties associated with converting landings data to the live weight equivalent, there are additional challenges with estimating the live weight equivalent based on trade data. Specifically, there are two main issues. First, commodity codes often include more than one species, which may differ in size and shape, and therefore, their appropriate live weight conversion factor (Figure 6). Second, while commodity codes do specify the presentations and states, they may include multiple presentations and states which vary in their live weight conversion factor (Figure 6). For example, the "whole fresh fish" category may include multiple landed presentations, such as headed or gutted. Related to this last issue, the majority of live weight conversion factor data that is available is for converting landings to the live weight equivalent catch. As a result, estimating the live weight equivalent of traded products involves not only resolving the uncertainty in the landed live weight conversion factors, but also identifying the likely mix of species and presentations that fall within a code. To address this issue, the European Union maintains detailed live weight conversion factors that are matched to trade CN-8 codes through the European Market Observatory for Fisheries and Aquaculture Products (EUMOFA) (EUMOFA 2019). This data does include information on the assumptions used to determine the live weight conversion factor for many codes, which is valuable for transparency. Even with the best documentation though, single point values for live weight conversion factors will be unable to capture changes in the species mix or presentation within a product code. 
+
+![Figure 6: Illustration of the live weight equivalent calculation based on trade data reported as trade codes that include multiple species and presentations](Images/trade_LWE_calc_fig.png)
+
+To illustrate this issue, we calculated the estimated live weight equivalent of "[code description]" (HS 030354) exported from South Korea to the EU in 2018 based on a range of plausible live weight conversion factors. Specifically, we compare the estimated live weight using South Korea's value for frozen, gutted chub mackerel (*Scomber japonicus*), using the minimum and maximum chub mackerel value from other countries, using the minimum and maximum value of other species and presentations within this code, and using the EUMOFA value. 
+
+Figure 7: South Korea example with exports of 030354
 
 ## Catch Statistic Terminology
 
@@ -174,8 +152,12 @@ States "The fish live weight shall be obtained by multiplying the fish processed
 * Alternatively, catch data should report original landed presentation, and from this one could back-calculate the applied CF value
 * Need for EU-wide CF for all species/presentations -- there are cases where a country says to use the EU wide value for a species, but the EU does not provide a value for all states/presentations
 * Mismatch between landings data states and presentations. Need better definitions for the states and presentations. Not fully hierarchical, salted appears as a state and a presentation, and some states (e.g., cooked) don't appear on the state code list at all
-* 
 
+## References
+
+EUMOFA, 2019. Metadata 2: Data Management Annex 7 - Conversion factors by CN-8 codes from 2001 to 2019. European Commission. Brussels, Belgium.
+
+Gaulier, G. and Zignago, S., 2010. "BACI: International Trade Database at the Product-Level. The 1994-2007 Version," CEPII Working Paper 2010- 23, October 2010, CEPII.
 
 ## Appendix
 
