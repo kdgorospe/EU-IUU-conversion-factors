@@ -3,9 +3,5 @@
 .RData
 .Ruserdata
 Outputs/
-<<<<<<< HEAD
-.DS_Store
-Images/.DS_Store
-=======
 *.DS_Store
->>>>>>> 37ff2275b07badd90cdeeab6a382622c5b2d14b7
+
