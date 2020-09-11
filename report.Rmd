@@ -60,7 +60,7 @@ For the trade case study, we use the United Nations' Comtrade BACI data (a stand
 
 Landed weight must be multiplied by the corresponding live weight conversion factor in order to estimate the pre-processing weight of the catch (i.e., the live weight equivalent). The live weight conversion factor can have a large impact on the estimated catch and it is therefore important that the landed weight be matched to the appropriate live weight conversion factor, based on the species, presentation and state of the landed product (Figure 1). 
 
-![Figure 1: Illustration of estimated live weight equivalent of catch for different presentations and ranges of live weight conversion factors](Images/LWE_calc_fig.png)
+![Illustration of estimated live weight equivalent of catch for different presentations and ranges of live weight conversion factors](Images/LWE_calc_fig.png)
 
 The objective of the analysis is to illustrate the impact of different live weight conversion factors on calculated catch using case study examples. The case studies were selected to illustrate 1) the differences in the application of EU-wide versus Member State values and the range in values across the EU; 2) the differences in the application of EU versus non-EU conversion factors, and; 3) the additional challenges with the application of conversion factors to trade data. Case studies were selected on the basis of there being a wide range in the reported live weight conversion factors. Additionally, live weight conversion factors had to match available landings data for countries being compared.
 
@@ -75,9 +75,9 @@ Once the conversion factor data were matched to landings data, we were able to i
 Comparing the live weight conversion factors across species-presentation-state combinations landed in the EU reveals substantial variability for some products (Figure 2). The largest range is for the family *Lophiidae*, frozen, headed and gutted, which ranges from X to Y [Kelvin - add], representing a ##% difference in catch estimates (Figure 2). [Kelvin, can you add ~2 more examples with the numbers here (any of the top ones is fine)?] 
 
 
-![Figure 2a: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_absolute_top50.png)
+![a: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_absolute_top50.png)
 
-![Figure 2a: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_relative_top50.png)
+![b: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_relative_top50.png)
 
 Notably, while there are substantial differences in live weight conversion factors for products landed in the EU, this does not necessarily mean that one of the values is incorrect. Within a product for a family, such as *Lophiidae*, live weight conversion factors can vary across species and a country may set a value that is most representative of the most common species caught. Additionally, live weight conversion factors can vary with differences in processing technology, which may also vary geographically or over time. 
 
@@ -86,9 +86,9 @@ While both values could be correct, it could also be the case that neither is co
 When considering just the official conversion factors implemented by the European Commission's Regulation (EU) No 404/2011 for EU-wide and Member State fisheries products, and merge this with all products landed by fishing vessels from the 27 EU countries, we see considerable data gaps that hinder our (and the EU's) ability to calculate nominal match for these landed product (Figure 3). Part of this stems from the fact that the presentations listed by the European Commission do not properly align with those found in Eurostat's landings data (supplementary? Table X [Kelvin - sure! Add to the Appendix]) as well as a list of all species present in the landings data for which there is currently no EU-wide or national-level CF value. 
 
 
-![Figure 3a: Grid showing the top 50 species by landed weight in the EU (accounts for 87.1 % of total landings from 1992 - 2018). Gray areas are species, states, and presentations that are not landed. (A) Shaded blue areas represent the proportion of all countries that reportedly landed a species, state, and presentation (i.e., product) that also have a national-level conversion factor for that product. (B) Green areas represent products that have an EU-wide level conversior factor. Pink areas represent products that have no EU-wide level conversion factor.](Images/Section - CF ranges and data coverage/CF_natonal_values_heat_map.png)
+![a: Grid showing the top 50 species by landed weight in the EU (accounts for 87.1 % of total landings from 1992 - 2018). Gray areas are species, states, and presentations that are not landed. (A) Shaded blue areas represent the proportion of all countries that reportedly landed a species, state, and presentation (i.e., product) that also have a national-level conversion factor for that product. (B) Green areas represent products that have an EU-wide level conversior factor. Pink areas represent products that have no EU-wide level conversion factor.](Images/Section - CF ranges and data coverage/CF_natonal_values_heat_map.png)
 
-![Figure 3b](Images/Section - CF ranges and data coverage/CF_EU_values_yes_no.png)
+![b](Images/Section - CF ranges and data coverage/CF_EU_values_yes_no.png)
 
 
 ## EU Fishery Case Studies
@@ -105,49 +105,47 @@ The time series graphs of national-level vs EU-wide CF values show various lande
 
 ### Atlantic cod (*Gadus morhua*)
 
-![Figure 4a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_4_Gadus morhua Fresh, gutted and headed_norway_removed.png)
+![a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_4_Gadus morhua Fresh, gutted and headed_norway_removed.png)
 
-![Figure 4b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_4_Gadus morhua Fresh, gutted and headed.png)
+![b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_4_Gadus morhua Fresh, gutted and headed.png)
 
-![Figure 5a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Portugal-vs-EU_Gadus-morhua.png)
+![a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Portugal-vs-EU_Gadus-morhua.png)
 
-![Figure 5b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Norway-vs-EU_Gadus-morhua.png)
+![b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Norway-vs-EU_Gadus-morhua.png)
 
-![Figure 6](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series of min vs max CF/landings-vs-catch_min-vs-max-CF_Gadus-morhua.png)
-[Kelvin - we can probably just start this plot at 2000]
+![Time series min/max](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series of min vs max CF/landings-vs-catch_min-vs-max-CF_Gadus-morhua.png)
 
 ### Hake (*Merluccius merluccius*)
 
-![Figure 7a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_10_Merluccius merluccius Fresh, gutted and headed.png)
+![Hake bar graphs](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_10_Merluccius merluccius Fresh, gutted and headed.png)
 
-![Figure 8a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Portugal-vs-EU_Merluccius-merluccius.png)
+![a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Portugal-vs-EU_Merluccius-merluccius.png)
 
-![Figure 8b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Norway-vs-EU_Merluccius-merluccius.png)
+![b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/landings-vs-catch_Norway-vs-EU_Merluccius-merluccius.png)
 
-![Figure 9](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series of min vs max CF/landings-vs-catch_min-vs-max-CF_Merluccius-merluccius.png)
-[Kelvin - we can probably start this plot at 2000]
+![Min/max time series](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series of min vs max CF/landings-vs-catch_min-vs-max-CF_Merluccius-merluccius.png)
+
 ### Monkfish (*Lophiidae*)
 
-![Figure 10a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_7_Lophiidae Fresh, gutted and headed.png)
+![a](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_7_Lophiidae Fresh, gutted and headed.png)
 
-![Figure 10b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_8_Lophiidae Frozen, gutted and headed.png)
+![b](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_8_Lophiidae Frozen, gutted and headed.png)
 
 
 
-![Figure 11](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series of min vs max CF/landings-vs-catch_min-vs-max-CF_Lophiidae.png)
+![Monkfish min/max](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series of min vs max CF/landings-vs-catch_min-vs-max-CF_Lophiidae.png)
 
 
 ## Live weight equivalents for traded seafood
 
 Estimating the live weight equivalent of catch from trade data is important for calculating the apparent consumption of seafood in a country and for monitoring the effects of implemented trade policies on foreign nations. While the above sections detail the uncertainties associated with converting landings data to the live weight equivalent, there are additional challenges with estimating the live weight equivalent based on trade data. Specifically, there are two main issues. First, commodity codes often include more than one species, which may differ in size and shape, and therefore, their appropriate live weight conversion factor (Figure 12). Second, while commodity codes do specify the presentations and states, they may include multiple presentations and states which vary in their live weight conversion factor (Figure 12). For example, the "whole fresh fish" category may include multiple landed presentations, such as headed or gutted. Related to this last issue, the majority of live weight conversion factor data that is available is for converting landings to the live weight equivalent catch. As a result, estimating the live weight equivalent of traded products involves not only resolving the uncertainty in the landed live weight conversion factors, but also identifying the likely mix of species and presentations that fall within a code. To address this issue, the European Union maintains detailed live weight conversion factors that are matched to trade CN-8 codes through the European Market Observatory for Fisheries and Aquaculture Products (EUMOFA) (EUMOFA 2019). This data does include information on the assumptions used to determine the live weight conversion factor for many codes, which is valuable for transparency. Even with the best documentation though, single point values for live weight conversion factors will be unable to capture changes in the species mix or presentation within a product code. 
 
-![Figure 12: Illustration of the live weight equivalent calculation based on trade data reported as trade codes that include multiple species and presentations](Images/trade_LWE_calc_fig.png)
+![Illustration of the live weight equivalent calculation based on trade data reported as trade codes that include multiple species and presentations](Images/trade_LWE_calc_fig.png)
 
 To illustrate this issue, we calculated the estimated live weight equivalent of "[code description]" (HS 030354) exported from South Korea to the EU in 2018 based on a range of plausible live weight conversion factors. Specifically, we compare the estimated live weight using South Korea's value for frozen, gutted chub mackerel (*Scomber japonicus*), using the minimum and maximum chub mackerel value from other countries, using the minimum and maximum value of other species and presentations within this code, and using the EUMOFA value. 
 
 
-![Figure 13: EU 2018 imports of XX (HS 030354) from South Korea in terms of product weight, live weight using South Korea's conversion factor for frozen, gutted chub mackerel (*Scomber japonicus*), live weight using the maximum conversion factor falling within HS 030354 and live weight using the minimum conversion factor falling within HS 030354.](Images/trade_case_study.png)
-[Kelvin - I think we should also add a bar that uses the EUMOFA CF value for 030354]
+![ EU 2018 imports of XX (HS 030354) from South Korea in terms of product weight, live weight using South Korea's conversion factor for frozen, gutted chub mackerel (*Scomber japonicus*), live weight using the maximum conversion factor falling within HS 030354 and live weight using the minimum conversion factor falling within HS 030354.](Images/trade_case_study.png)
 
 ## Catch Statistic Terminology
 
@@ -166,12 +164,17 @@ Within the CWP, net weight refers to the landed weight, not the nominal catch. T
 
 An additional issue related to the terminology is that the Commission implementing regulation (EU) No 404/2011 states "The fish live weight shall be obtained by multiplying the fish processed weight by the conversion factors referred to in Article 49 of this Regulation for each species and presentation." This guidance includes the the term "fish processed weight," which is not the term used on the catch certificate.
 
+[Add note about amendment to these terms]
+
 ## Recommendations for Harmonizing Catch Statistics
 
-* For data reproducibility:
-* Landings certificate should collect CF values. This is especially important in the cases of multiple presentations, where it would be very difficult to guess the CF applied ("In case of collective presentations, only one conversion factor corresponding to one of the parts of the collective presentation of a fish shall be used.")
-* CF values applied to back-calculate live weight should be reported with the catch data (currently unable to back-calculate CF values from historical catch and landings because fish are landed in multiple presentations which can't be paired back to total catch which does not record original landed presentations)
-* Alternatively, catch data should report original landed presentation, and from this one could back-calculate the applied CF value
+Reliable catch data is essential for many fishery management and monitoring systems around the world. Catch certificates, including the EU's catch certificate program, represent an important step for tracking catch volumes. In order for the information collected on catch certificates to be maximally valuable, the data processing should be fully reproducible, which includes clafirying certificate terminology (described in the previous section) and reporting live weight conversion factors applied. 
+
+First, the catch certificates should include a field to record the CF value applied. In principle, the conversion factor applied could be derived when both the estimated live weight and the net weight are recorded. Given that the conversion factor represents a critical assumption in the calculation, providing the conversion factor directly would simultaneously make this assumption more transparent and would allow for the live weight calculation to be checked for potential errors. This is especially important in the cases of multiple presentations, where it would be very difficult to guess the conversion factor applied, as the the guidance indicates that "In case of collective presentations, only one conversion factor corresponding to one of the parts of the collective presentation of a fish shall be used."
+
+Second, the live weight converson factors applied to landings data should ideally be reported with the landings data to all data users to convert between the landings and catch data. Catch data is currently aggregated by species, while the landings data is reported by species, presentation, state combinations. Without knowing the live weight conversion factors applied to each species, presentation, state combination, a data user cannot convert between the two data sources. Alternatively, catch data could be reported in terms of the live weight equivalent by species, presentation, state combination, which would allow the apparent live weight conversion factor to be calculated. 
+
+
 * Need for EU-wide CF for all species/presentations -- there are cases where a country says to use the EU wide value for a species, but the EU does not provide a value for all states/presentations
 * Mismatch between landings data states and presentations. Need better definitions for the states and presentations. Not fully hierarchical, salted appears as a state and a presentation, and some states (e.g., cooked) don't appear on the state code list at all
 
@@ -194,4 +197,6 @@ Miller, E.A., McClenachan, L., Uni, Y., Phocas, G., Hagemann, M.E. and Van Houta
 
 ## Appendix
 
+![Appendix Figure 1a: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_absolute.png)
 
+![Appendix Figure 1b: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_relative.png)
