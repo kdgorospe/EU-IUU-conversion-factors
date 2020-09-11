@@ -338,7 +338,8 @@ cf_case_data_4 <- cf_data_full %>%
   mutate(x_labels = as.factor(x_labels)) %>%
   # Calculate relative values for a separate plot
   group_by(scientific_name, landings_code) %>%
-  mutate(min_in_group = min(conversion_factor)) %>%
+  mutate(min_in_group = min(conversion_factor),
+         range_in_group = max(conversion_factor)-min(conversion_factor)) %>%
   ungroup() %>%
   mutate(cf_relative = conversion_factor / min_in_group) %>%
   group_by(scientific_name, landings_code) %>%
@@ -358,14 +359,15 @@ p <- ggplot(data = cf_case_data_4, mapping = aes(x = x_labels, y = conversion_fa
   scale_shape_manual(values = group.shapes) +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
-        axis.text.y = element_text(size = 11),
+        axis.text.y = element_text(size = 10),
         axis.title = element_text(size = 24),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
         legend.box.just = "left",
         legend.title = element_text(size = 12),
-        legend.text = element_text(size = 12)) +
+        legend.text = element_text(size = 12),
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
   coord_flip() 
 
 print(p)
@@ -374,6 +376,66 @@ ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full.png")
 
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_4 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data_FULL.csv"), quote = FALSE, row.names = FALSE)
+
+
+# Reorder by range in CF values
+p <- ggplot(data = cf_case_data_4 %>%
+              mutate(x_labels = as.factor(x_labels)) %>%
+              mutate(x_labels = fct_reorder(x_labels, range_in_group)), mapping = aes(x = x_labels, y = conversion_factor)) +
+  geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 10),
+        axis.title = element_text(size = 24),
+        plot.title = element_text(size = 24, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 12),
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
+  coord_flip() 
+
+print(p)
+# Standard letter size paper:
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered.png"), width = 8.5, height = 11)
+
+
+# Limit to top 50 - not elegant - just identified the value for "range_in_group" that gives us the top 50
+tmp <- cf_case_data_4 %>%
+  filter(x_labels == "Coryphaenoides rupestris (Frozen, gutted)")
+
+p <- ggplot(data = cf_case_data_4 %>%
+              mutate(x_labels = as.factor(x_labels)) %>%
+              mutate(x_labels = fct_reorder(x_labels, range_in_group)) %>%
+              arrange(range_in_group) %>% filter(range_in_group >= 0.0900), mapping = aes(x = x_labels, y = conversion_factor)) +
+  geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  scale_color_manual(values = group.colors) + 
+  scale_shape_manual(values = group.shapes) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 10),
+        axis.title = element_text(size = 24),
+        plot.title = element_text(size = 24, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 12),
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
+  coord_flip() 
+
+print(p)
+# Standard letter size paper:
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered-top50.png"), width = 8.5, height = 11)
+
+
 
 ############################################################################################################
 # Step 6A: Now make CF values relative to the minimum value
@@ -386,19 +448,20 @@ group.shapes <- c(17, 20)
 p <- ggplot(data = cf_case_data_4, mapping = aes(x = x_labels, y = cf_relative)) +
   geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
   geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
-  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Relative differences in conversion factors", color = "EU affiliation", shape = "CF implementation") +
   scale_color_manual(values = group.colors) + 
   scale_shape_manual(values = group.shapes) +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
-        axis.text.y = element_text(size = 11),
+        axis.text.y = element_text(size = 10),
         axis.title = element_text(size = 24),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
         legend.box.just = "left",
         legend.title = element_text(size = 12),
-        legend.text = element_text(size = 12)) +
+        legend.text = element_text(size = 12),
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
   coord_flip() 
 
 print(p)
@@ -414,31 +477,24 @@ p <- ggplot(cf_case_data_4 %>%
               mutate(x_labels = fct_reorder(x_labels, max_cf_relative)), mapping = aes(x = x_labels, y = cf_relative)) +
   geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
   geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
-  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Relative differences in conversion factors", color = "EU affiliation", shape = "CF implementation") +
   scale_color_manual(values = group.colors) + 
   scale_shape_manual(values = group.shapes) +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
-        axis.text.y = element_text(size = 11),
+        axis.text.y = element_text(size = 10),
         axis.title = element_text(size = 24),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
         legend.box.just = "left",
         legend.title = element_text(size = 12),
-        legend.text = element_text(size = 12)) +
+        legend.text = element_text(size = 12),
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
   coord_flip() 
 
 print(p)
 ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full_reordered.png"), width = 11, height = 13)
-
-tmp<- cf_case_data_4 %>% 
-  mutate(x_labels = as.factor(x_labels)) %>%
-  mutate(x_labels = fct_reorder(x_labels, max_cf_relative)) %>%
-  arrange(desc(max_cf_relative))
-
-# Top 50 goes to Coryphaenoides rupestris (Frozen, gutted)
-tmp %>% filter(x_labels == "Coryphaenoides rupestris (Frozen, gutted)")
 
 # Step 6B: If too much data to present just cut down to top 50?
 p <- ggplot(data = cf_case_data_4 %>% 
@@ -447,7 +503,7 @@ p <- ggplot(data = cf_case_data_4 %>%
               arrange(max_cf_relative) %>% filter(max_cf_relative >= 1.08), mapping = aes(x = x_labels, y = cf_relative)) +
   geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
   geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
-  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  labs(title = "", x = "Species (State, Preparation)", y = "Relative differences in conversion factors", color = "EU affiliation", shape = "CF implementation") +
   scale_color_manual(values = group.colors) + 
   scale_shape_manual(values = group.shapes) +
   theme_classic() + 
@@ -459,7 +515,8 @@ p <- ggplot(data = cf_case_data_4 %>%
         legend.box = "vertical",
         legend.box.just = "left",
         legend.title = element_text(size = 12),
-        legend.text = element_text(size = 12)) +
+        legend.text = element_text(size = 12),
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
   coord_flip() 
 
 print(p)
