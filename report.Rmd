@@ -72,7 +72,11 @@ Once the conversion factor data were matched to landings data, we were able to i
 
 ## Live weight conversion factor ranges and data coverage
 
+<<<<<<< HEAD
 Comparing the live weight conversion factors across species-presentation-state combinations landed in the EU reveals substantial variability for some products (Figure 2). The largest range is for the family *Lophiidae*, frozen, headed and gutted, which ranges from 1.2 to 3.25, representing a 170% difference in catch estimates (Figure 2).
+=======
+Comparing the live weight conversion factors across species-presentation-state combinations landed in the EU reveals substantial variability for some products (Figure 2). The largest range is for the family *Lophiidae*, frozen, headed and gutted, which ranges from 1.2 to 3.25, representing a 170% difference in catch estimates (Figure 2). Other examples of large ranges include Coryphaenoides rupestris, frozen, gutted, and headed (1.4 to 2.3) and Merluccius merluccius, frozen, gutted (1.09 to 1.6). [Kelvin, can you add ~2 more examples with the numbers here (any of the top ones is fine)?] 
+>>>>>>> 078ac43a22609f521b98e54f9c2d60013549f6bc
 
 
 ![a: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_absolute_top50.png)
