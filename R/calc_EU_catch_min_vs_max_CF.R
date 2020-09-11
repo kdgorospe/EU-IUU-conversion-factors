@@ -79,10 +79,15 @@ eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FR
               "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
               "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
 
+# Do this loop for all species %in% cod, hake, monkfish:
+species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
+
+# LIMIT TO DATA FROM 2000 ONWARD
 landings_dat <- landings_dat %>%
   filter(scientific_name %in% species_list) %>%
   mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
-  filter(iso3c %in% eu_codes)
+  filter(iso3c %in% eu_codes) #%>%
+  filter(year >= 2000)
 
 ############################################################################################################
 # Step 2: Pick a single species and calculate nominal catch (using minimum vs maximum CV value available across all countries, including EU-wide value) for each presentation
@@ -103,9 +108,6 @@ cf_min_max <- cf_data_full %>%
             min_iso3c = paste(iso3c[conversion_factor == min_cf], sep = ", ", collapse = ", "),
             max_iso3c = paste(iso3c[conversion_factor == max_cf], sep = ", ", collapse = ", ") ) %>%
   ungroup()
-
-# Do this loop for all species %in% cod, hake, monkfish:
-species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
 
 for (i in 1:length(species_list)){
   
@@ -164,10 +166,11 @@ for (i in 1:length(species_list)){
   
   p <- ggplot() +
     geom_line(data = landings_all_pres %>% filter(is.na(min_cf)==FALSE), aes(x = year, y = year_landings, color = presentation)) +
-    geom_line(data = landings_no_cf, aes(x = year, y = year_landings_no_cf)) +
+    geom_line(data = landings_no_cf, aes(x = year, y = year_landings_no_cf, linetype = "dashed")) +
     geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_min, linetype = "solid")) +
     geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_max, linetype = "solid")) +
-    scale_linetype_manual(name = "summed catch", values = c("solid"), labels = c("by minimum and maximum CF value")) +
+    scale_linetype_manual(name = "total", values = c("dashed", "solid"), labels = c("landings with no CF value", "catch by minimum and maximum CF value")) +
+    ylab("tonnes") +
     theme_classic() + 
     theme(axis.text.x = element_text(size = 12),
           axis.text.y = element_text(size = 12),
@@ -177,12 +180,12 @@ for (i in 1:length(species_list)){
           legend.box = "vertical",
           legend.box.just = "left",
           legend.title = element_text(size = 14),
-          legend.text = element_text(size = 12)) 
+          legend.text = element_text(size = 10)) 
   
   
   plot(p)
   pngname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_list[i], pattern = " ", replacement = "-"), ".png", sep = "")
-  ggsave(file = file.path(outdir, pngname), width = 9, height = 7)  
+  ggsave(file = file.path(outdir, pngname), width = 11.5, height = 8)  
   
 }
 

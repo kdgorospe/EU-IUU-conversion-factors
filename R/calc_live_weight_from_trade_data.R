@@ -21,14 +21,15 @@ artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
 outdir <- "/Volumes/jgephart/EU IUU/Outputs"
 
-
+# Read in all CF and trade data:
 hs_taxa_cf_match <- read.csv(file.path(trade_datadir, "2020-09-10_hs-taxa-CF_strict-match.csv"))
 trade_data <- read.csv(file.path(trade_datadir, "2018_korea_exports_030354.csv"))
+eumofa_data <- read.csv(file.path(datadir, "EUMOFA_compiled.csv"), stringsAsFactors = FALSE)
 source("R/combine_CF_datasets.R")
 cf_data_full <- combine_CF_datasets()
 
 hs_taxa_cf_match %>%
-  filter(Code == "30354")
+  filter(Code == "30354") %>% as_tibble()
 
 # Step 1 get applicable CF values: min and max CF values for HS code
 cf_by_code <- hs_taxa_cf_match %>% 
@@ -50,11 +51,19 @@ cf_data_full %>%
   filter(conversion_factor == 1.00)
 # MIN VALUE shared by the EU, Germany, Spain, and the UK (all "whole" presentations)
 
+# Get the South Korea value from our ARTIS cf value spreadsheet
 cf_korea <- cf_data_full %>%
   filter(country == "Korea Rep" & scientific_name == "Scomber japonicus") %>%
   select(conversion_factor) %>%
   rename(cf_korea = conversion_factor)
 # KOREA value applies to "Frozen gutted"
+
+# Get the EUMOFA value from our ARTIS data folder
+cf_eumofa <- eumofa_data %>%
+  filter(str_detect(CN.8, "^0303 54")) %>%
+  pull(CF) %>%
+  mean()
+
 
 # Step 2 Aggregate trade data and apply CF values
 eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
@@ -65,17 +74,19 @@ product_q <- trade_data %>%
   filter(importer_iso3c %in% eu_codes) %>% # q is quantity in metric tonnes
   select(q) %>%
   sum()
+# Product was imported into France, Lithuania, Portugal, and Spain
 
-plot_dat <- data.frame(product_q = product_q, cf_korea = cf_korea, max_cf_by_code = cf_by_code$max_cf_by_code, min_cf_by_code = cf_by_code$min_cf_by_code) %>%
+plot_dat <- data.frame(product_q = product_q, cf_korea = cf_korea, max_cf_by_code = cf_by_code$max_cf_by_code, min_cf_by_code = cf_by_code$min_cf_by_code, cf_eumofa = cf_eumofa) %>%
   mutate(q_by_korea = product_q * cf_korea,
          q_by_max = product_q * max_cf_by_code,
-         q_by_min = product_q * min_cf_by_code) %>% 
+         q_by_min = product_q * min_cf_by_code,
+         q_by_eumofa = product_q * cf_eumofa) %>% 
   pivot_longer(cols = contains("q"), names_to = "calculation") %>%
   mutate(group = if_else(str_detect(calculation, "product"), true = "product form", false = "live weight"))
 
 p <- ggplot(plot_dat, aes(x = calculation, y = value, fill = group)) +
   geom_bar(stat = "identity") +
-  scale_x_discrete(labels = c("Total EU Imports", "Korea CF", "Max CF", "Min CF")) +
+  scale_x_discrete(labels = c("Total EU Imports", "EUMOFA CF", "Korea CF", "Max CF", "Min CF")) +
   labs(y = "tonnes", x = "", fill = "") +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 14),
