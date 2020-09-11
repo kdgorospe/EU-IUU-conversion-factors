@@ -8,8 +8,3 @@ output: html_document
 
 ### Audience
 The targeted audience for the factsheet will primarily be the European Commission, as well as decision-makers (i.e. Members of the European Parliament) who could advocate for the European Commission to address the issues that have been identified. The European Commission has the responsibility of developing the implementing Regulation which establishes conversion factors and presentation codes for processed fish, along with measures and guidelines outlining their use. A secondary target will be EU Member States which will need to implement the conversion factors. Note that the factsheet serves to bring the issue to light in simple terms so as to raise awareness among decision makers. It should not be a technical factsheet.
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
