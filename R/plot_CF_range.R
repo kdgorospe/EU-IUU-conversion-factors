@@ -354,13 +354,13 @@ group.shapes <- c(17, 20)
 p <- ggplot(data = cf_case_data_4, mapping = aes(x = x_labels, y = conversion_factor)) +
   geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
   geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
-  labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+  labs(title = "", x = "", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
   scale_color_manual(values = group.colors) + 
   scale_shape_manual(values = group.shapes) +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
         axis.text.y = element_text(size = 10),
-        axis.title = element_text(size = 24),
+        axis.title = element_text(size = 14),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
@@ -390,7 +390,7 @@ p <- ggplot(data = cf_case_data_4 %>%
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
         axis.text.y = element_text(size = 10),
-        axis.title = element_text(size = 24),
+        axis.title = element_text(size = 14),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
@@ -421,7 +421,7 @@ p <- ggplot(data = cf_case_data_4 %>%
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
         axis.text.y = element_text(size = 10),
-        axis.title = element_text(size = 24),
+        axis.title = element_text(size = 14),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
@@ -454,7 +454,7 @@ p <- ggplot(data = cf_case_data_4, mapping = aes(x = x_labels, y = cf_relative))
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
         axis.text.y = element_text(size = 10),
-        axis.title = element_text(size = 24),
+        axis.title = element_text(size = 14),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
@@ -483,7 +483,7 @@ p <- ggplot(cf_case_data_4 %>%
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
         axis.text.y = element_text(size = 10),
-        axis.title = element_text(size = 24),
+        axis.title = element_text(size = 14),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
@@ -509,7 +509,7 @@ p <- ggplot(data = cf_case_data_4 %>%
   theme_classic() + 
   theme(axis.text.x = element_text(size = 15),
         axis.text.y = element_text(size = 11),
-        axis.title = element_text(size = 24),
+        axis.title = element_text(size = 14),
         plot.title = element_text(size = 24, hjust = 0),
         legend.position = "bottom",
         legend.box = "vertical",
@@ -687,48 +687,128 @@ for (i in 1:length(unique(case_study_plot$x_labels))){
   #ggsave(file = file.path(outdir, "landings_vs_catch_case_study_4_Gadus morhua (Fresh, gutted and headed)-JustNorway.png"))
 }
 
+### CREATE MULTIPANEL PLOTS - CLUNKY: need to adjust for different figures
 
-### REDO certain plots but with certain countries removed:
-for (i in 1:length(unique(case_study_plot$x_labels))){
-  plot_i <- case_study_plot %>%
-    filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
-    filter(is.na(value)==FALSE) %>%
-    #filter(nationality_of_vessel != "Norway*")
-    #filter(nationality_of_vessel != "Belgium")
-    #filter(nationality_of_vessel != "Iceland*")
-    #filter(nationality_of_vessel %in% c("Norway*", "United Kingdom*")==FALSE)
-    #filter(nationality_of_vessel %in% c("Norway*", "Spain")==FALSE)
-    filter(nationality_of_vessel != "Spain")
-  # To re-order groups:
-  #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
-  sciname_presentation <- unique(plot_i$x_labels)
-  common_name <- unique(plot_i$common_name)
-  long_title <- paste(common_name, sciname_presentation, sep = "\n")
-  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = calculation)) +
-    geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
-    labs(title = long_title, x = "Nationality of vessel", y = "Tonnes", fill = "") +
-    #scale_color_manual(values = group.colors) + 
-    #scale_shape_manual(values = group.shapes) +
-    scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
-                      breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
-                      labels = c("landings", "catch by national CF", "catch by EU CF")) +
-    theme_classic() + 
-    theme(axis.text.x = element_text(size = 12),
-          axis.text.y = element_text(size = 12),
-          axis.title = element_text(size = 18),
-          plot.title = element_text(size = 18, hjust = 0),
-          legend.position = "bottom",
-          legend.box = "vertical",
-          legend.box.just = "left",
-          legend.title = element_text(size = 14),
-          legend.text = element_text(size = 12)) + 
-    coord_flip()
-  plot(p)
-  pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, "_countries_removed.png", sep = "")
-  ggsave(file = file.path(outdir, pngname))
-}
+# Choose x_labels_multipanel and run to plot function and then re-run with new x_labels_multipanel 
+# For Gadus morhua fresh, gutted, and headed, need to run once without Norway and once with JUST norway
+
+#x_labels_multipanel <- "Gadus morhua (Fresh, gutted and headed)"
+#x_labels_multipanel <- "Lophiidae (Fresh, gutted and headed)"
+x_labels_multipanel <- "Lophiidae (Frozen, gutted and headed)"
+
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) #%>%
+  #filter(nationality_of_vessel=="Norway*") 
+  #filter(nationality_of_vessel %in% c("Norway*", "United Kingdom*")==FALSE)
+# To re-order groups:
+#mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
+sciname_presentation <- unique(plot_i$x_labels)
+common_name <- unique(plot_i$common_name)
+long_title <- paste(common_name, sciname_presentation, sep = "\n")
 
 
+cod_no_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = long_title, x = "", y = "", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "none",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  coord_flip()
+
+cod_only_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = "", x = "", y = "Tonnes", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  annotate("text", y = c(158000, 161500, 183000), x = c(0.8, 1, 1.2), label = c("--- round cut", "--- right cut", "--- earbone off")) +
+  ylim(c(0, 200000)) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  coord_flip()
+  
+monkfish_fresh <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = long_title, x = "", y = "", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "none",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  coord_flip()
+
+monkfish_frozen <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = "", x = "", y = "Tonnes", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  coord_flip()
+
+
+plot(monkfish_fresh)
+plot(monkfish_frozen)
+plot(cod_no_Norway)
+plot(cod_only_Norway)
+
+gg1 <- ggplotGrob(cod_no_Norway)
+gg2 <- ggplotGrob(cod_only_Norway)
+gg_cod <- rbind(gg1, gg2)
+plot(gg_cod)
+
+ggsave(file = file.path(outdir, "cod_snapshot_country_vs_EU_multipanel.png"), gg_cod, width = 9, height = 7)
+
+gg3 <- ggplotGrob(monkfish_fresh)
+gg4 <- ggplotGrob(monkfish_frozen)
+gg_monkfish <- rbind(gg3, gg4)
+plot(gg_monkfish)
+
+ggsave(file = file.path(outdir, "monkfish_snapshot_country_vs_EU_multipanel.png"), gg_monkfish, width = 9, height = 7)
 ### NO LONGER DOING MONETARY VALUE ANALYSIS BELOW:
 
 ############################################################################################################

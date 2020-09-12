@@ -201,14 +201,14 @@ heat_map_theme <-   theme(axis.text.x = element_text(angle = 45, hjust = 1, size
                           legend.position = "bottom", 
                           legend.title = element_text(size = 8)) 
 
-p <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
+p_heat_map <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
   geom_raster() +
   scale_fill_continuous(name = "National-level CF availability", labels = c(0, 0.25, 0.5, 0.75, 1.0)) +
   labs(x = "Scientific name", y = "Presentation") +
   theme_classic() +
   heat_map_theme
 
-print(p)
+print(p_heat_map)
 ggsave(file = file.path(outdir, "CF_national_values_heat_map.png"), height = 6, width = 8.5)
 
 
@@ -269,7 +269,7 @@ top_50_EU_yes_no <- EU_yes_no_grid %>%
 
 
 
-p <- ggplot(data = top_50_EU_yes_no, aes(x = scientific_name, y = presentation, fill = EU_CF)) +
+p_yes_no <- ggplot(data = top_50_EU_yes_no, aes(x = scientific_name, y = presentation, fill = EU_CF)) +
   geom_raster() +
   scale_fill_discrete(name = "EU-wide CF", labels = c("not available", "available")) +
   #scale_fill_discrete() +
@@ -278,8 +278,37 @@ p <- ggplot(data = top_50_EU_yes_no, aes(x = scientific_name, y = presentation, 
   labs(x = "Scientific name", y = "Presentation")
   
 
-print(p)
+print(p_yes_no)
 ggsave(file = file.path(outdir, "CF_EU_values_heat_map_yes_no.png"), width = 8.5, height = 6)
+
+############################################################################################################
+### REDO PLOTS FOR MULTIPANEL: remove axis labels, add title "A" and "B"
+p_heat_map <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presentation, fill = proportion_have_CF)) +
+  geom_raster() +
+  scale_fill_continuous(name = "National-level CF availability", labels = c(0, 0.25, 0.5, 0.75, 1.0)) +
+  labs(x = "", y = "", title = "A") +
+  theme_classic() +
+  heat_map_theme
+
+print(p_heat_map)
+
+p_yes_no <- ggplot(data = top_50_EU_yes_no, aes(x = scientific_name, y = presentation, fill = EU_CF)) +
+  geom_raster() +
+  scale_fill_discrete(name = "EU-wide CF", labels = c("not available", "available")) +
+  #scale_fill_discrete() +
+  theme_classic() +
+  heat_map_theme +
+  labs(x = "", y = "", title = "B")
+
+print(p_yes_no)
+
+gg1 <- ggplotGrob(p_heat_map)
+gg2 <- ggplotGrob(p_yes_no)
+g_heat_maps <- rbind(gg1, gg2)
+plot(g_heat_maps)
+
+ggsave(file = file.path(outdir, "heat_maps_multipanel.png"), g_heat_maps, device = "png", width = 8.5, height = 11)
+
 
 ############################################################################################################
 # Step 2B: Calculate whether a species+presentation combinations is available at any level (national or EU-wide)

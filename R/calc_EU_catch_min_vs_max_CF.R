@@ -86,8 +86,10 @@ species_list <- c("Merluccius merluccius", "Lophiidae", "Gadus morhua")
 landings_dat <- landings_dat %>%
   filter(scientific_name %in% species_list) %>%
   mutate(iso3c = countrycode(nationality_of_vessel, origin = "country.name", destination = "iso3c")) %>%
-  filter(iso3c %in% eu_codes) #%>%
+  filter(iso3c %in% eu_codes) %>%
   filter(year >= 2000)
+  
+
 
 ############################################################################################################
 # Step 2: Pick a single species and calculate nominal catch (using minimum vs maximum CV value available across all countries, including EU-wide value) for each presentation
@@ -162,7 +164,8 @@ for (i in 1:length(species_list)){
     group_by(year) %>%
     summarise(year_total_catch_min = sum(year_catch_min),
               year_total_catch_max = sum(year_catch_max)) %>%
-    ungroup
+    ungroup %>%
+    mutate(difference = year_total_catch_max - year_total_catch_min)
   
   p <- ggplot() +
     geom_line(data = landings_all_pres %>% filter(is.na(min_cf)==FALSE), aes(x = year, y = year_landings, color = presentation)) +
