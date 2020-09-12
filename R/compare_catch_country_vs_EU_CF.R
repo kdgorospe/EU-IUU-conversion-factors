@@ -261,7 +261,7 @@ for(i in 1:length(country_list)){
         geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
         geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch, linetype = "dotted"), size = size_for_common_lines) +
         geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch, linetype = "dashed"), size = size_for_common_lines) +
-        scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
+        scale_linetype_manual(name = "summed catch", values = c("dashed", "dotted"), labels = c("by EU CF value", "by national CF value")) +
         theme_classic() + 
         theme(axis.text.x = element_text(size = 12),
               axis.text.y = element_text(size = 12),
@@ -273,7 +273,7 @@ for(i in 1:length(country_list)){
               legend.title = element_text(size = 14),
               legend.text = element_text(size = 12)) 
       
-      #print(p)
+      print(p)
       pngname <- paste("landings-vs-catch_", country_list[i], "-vs-EU_", str_replace(species_list[j], pattern = " ", replacement = "-"), ".png", sep = "")
       ggsave(file = file.path(outdir, pngname), device = "png", width = 9, height = 7)
     }
@@ -366,9 +366,6 @@ landings_with_EU_wide_CF <- landings_all_pres %>%
 # The only way to meaningfully compare any discrepancy in total catch between national vs EU CF values is to only look at those presentations that are common to both
 pres_intersect <- intersect(unique(landings_with_national_CF$presentation_national), unique(landings_with_EU_wide_CF$presentation_EU_wide))
 
-# ONLY continue if there are presentations in common between national and EU datasets (i.e., pres_intersect is not empty)
-
-
 # Get landings presentations that are common to EU and national CF values
 national_CF_compare <- landings_with_national_CF %>%
   filter(presentation_national %in% pres_intersect)
@@ -419,7 +416,7 @@ p_norway_hake <- ggplot() +
   geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
   geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch, linetype = "dotted"), size = size_for_common_lines) +
   geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch, linetype = "dashed"), size = size_for_common_lines) +
-  scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
+  scale_linetype_manual(name = "summed catch", values = c("dashed", "dotted"), labels = c("by EU CF value", "by national CF value")) +
   labs(x = "", y = "tonnes", title = "B") +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 12),
@@ -476,8 +473,8 @@ p_norway_cod <- ggplot() +
   geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
   geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch, linetype = "dotted"), size = size_for_common_lines) +
   geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch, linetype = "dashed"), size = size_for_common_lines) +
-  scale_color_manual(values = c("violet", "darkorange2")) +
-  scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
+  scale_color_manual(values = c("violet", "darkorange")) +
+  scale_linetype_manual(name = "summed catch", values = c("dashed", "dotted"), labels = c("by EU CF value", "by national CF value")) +
   labs(x = "", y = "tonnes", title = "B") +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 12),
