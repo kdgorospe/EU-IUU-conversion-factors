@@ -11,7 +11,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ## Introduction
 
 Reliable catch data is a pillar of fisheries management around the world. Catch data is central to enforcing quota systems and is a critical input to fisheries management models, both to understand the biomass removed from the population and as an indicator of the stock health. While stock assessments remain the gold standard for evaluating the sustainability of a fishery, full stock assessments are cost-prohibitive in many locations and at the frequency necessary. Catch data therefore remains a critical input piece of data for data-poor stock assessment and when paired with with fishing effort, serves as an indicator of catch sustainability (Carruthers et al. 2012). 
@@ -75,9 +74,9 @@ Once the conversion factor data were matched to landings data, we were able to i
 Comparing the live weight conversion factors across species-presentation-state combinations landed in the EU reveals substantial variability for some products (Figure 2). The largest range is for the family *Lophiidae*, frozen, headed and gutted, which ranges from 1.2 to 3.25, representing a 170% difference in catch estimates (Figure 2). Other examples of large ranges include Coryphaenoides rupestris, frozen, gutted, and headed (1.4 to 2.3) and Merluccius merluccius, frozen, gutted (1.09 to 1.6). 
 
 
-![a: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_absolute_top50.png)
+![a: Absolute live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_absolute_top50.png)
 
-![b: Live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_relative_top50.png)
+![b: Relative live weight conversion factors for all species, states, and presentations for which the European Commission has an EU-wide conversion factor. Label shapes depict whether they are EU-wide (triangle) or national (circle) conversion factors. Colors depict whether they come from an EU country (blue), a European, but non-EU (orange), or a non-European country (green; Canada or USA)](Images/Section - CF ranges and data coverage/Figure2_relative_top50.png)
 
 Notably, while there are substantial differences in live weight conversion factors for products landed in the EU, this does not necessarily mean that one of the values is incorrect. Within a product for a family, such as *Lophiidae*, live weight conversion factors can vary across species and a country may set a value that is most representative of the most common species caught. Additionally, live weight conversion factors can vary with differences in processing technology, which may also vary geographically or over time. 
 
@@ -85,10 +84,9 @@ While both values could be correct, it could also be the case that neither is co
 
 When considering just the official conversion factors implemented by the European Commission's Regulation (EU) No 404/2011 for EU-wide and Member State fisheries products, and merge this with all products landed by fishing vessels from the 27 EU countries, we see considerable data gaps that hinder our (and the EU's) ability to calculate nominal match for these landed product (Figure 3). Part of this stems from the fact that the presentations listed by the European Commission do not properly align with those found in Eurostat's landings data.
 
-![Grid showing the top 50 species by landed weight in the EU (accounts for 87.1 % of total landings from 1992 - 2018). Gray areas are species, states, and presentations that are not landed. (A) Shaded blue areas represent the proportion of all countries that reportedly landed a species, state, and presentation (i.e., product) that also have a national-level conversion factor for that product. (B) Green areas represent products that have an EU-wide level conversior factor. Pink areas represent products that have no EU-wide level conversion factor.](Images/Section - CF ranges and data coverage/CF_natonal_values_heat_map.png)
+![Grid showing the top 50 species by landed weight in the EU (accounts for 87.1 % of total landings from 1992 - 2018). Gray areas are species, states, and presentations that are not landed. Shaded blue areas represent the proportion of all countries that reportedly landed a species, state, and presentation (i.e., product) that also have a national-level conversion factor for that product.](Images/Section - CF ranges and data coverage/CF_natonal_values_heat_map.png)
 
-![](Images/Section - CF ranges and data coverage/CF_EU_values_yes_no.png)
-
+![Grid showing the top 50 species by landed weight in the EU (accounts for 87.1 % of total landings from 1992 - 2018). Gray areas are species, states, and presentations that are not landed. Green areas represent products that have an EU-wide level conversior factor. Pink areas represent products that have no EU-wide level conversion factor.](Images/Section - CF ranges and data coverage/CF_EU_values_yes_no.png)
 
 ## EU Fishery Case Studies
 
@@ -108,7 +106,7 @@ Within the EU, there is variability in the estimated catch based on the Member S
 
 ![Landings (grey) and estimated catch using national (orange) and the EU-wide (blue) conversion factor values for fresh, gutted and headed Atlantic cod](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/cod_snapshot_country_vs_EU_multipanel.png)
 
-Summing across presentations and states, the total estimated Atlantic cod can be estimated using Member State versus EU-wide values (Figure X) and across the entire EU (Figure X). In this case, the application of the country-level values for Portugal and Norway result in higher estimated catch than the application of the EU-wide values (Figures X and Y). Notably, although the relative difference between the estimates may appear small, when applied to a large quantity, it can result in a large difference in estimated tonnes caught (Figure X). 
+Summing across presentations and states, the total estimated Atlantic cod can be estimated using Member State versus EU-wide values (Figure X) and across the entire EU (Figure X). In this case, the application of the country-level values for Portugal and Norway result in lower estimated catch than the application of the EU-wide values (Figure X). Notably, although the relative difference between the estimates may appear small, when applied to a large quantity, it can result in a large difference in estimated tonnes caught (Figure X). 
 
 ![Time series of Atlantic cod tonnes landed by product form (colored lines) and estimated catch (black lines) using the Member State (dotted) versus the EU (dashed) conversion factor for Portugal (A) and Norway (B)](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/cod_country_vs_EU_multipanel.png)
 
@@ -120,7 +118,7 @@ Hake (*Merluccius merluccius*) is another historically important fishery in Euro
 
 ![Landings (grey) and estimated catch using national (orange) and the EU-wide (blue) conversion factor values for fresh, gutted and headed hake](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Bar Graphs/landings_vs_catch_case_study_10_Merluccius merluccius Fresh, gutted and headed.png)
 
-While in the Atlantic cod case Norway and Portugal's estimated catch fell above the estimate using the EU-wide value, using the national values for each country results in an estimated catch below the catch estimated with the EU value (Figure X). Summing across all countries and presentations and states reveals the differences in the total hake catch (Figure X). For hake, there are several points where there are substantial volumes of product landed in presentations and states without an available conversion factor (Figure X). This highlights an important data gap issue for calculating hake catch.  
+While in the Atlantic cod case Norway and Portugal's estimated catch fell below the estimate using the EU-wide value, using the national values for each country results in an estimated hake catch above the catch estimated with the EU value (Figure X). Summing across all countries and presentations and states reveals the differences in the total hake catch (Figure X). For hake, there are several points where there are substantial volumes of product landed in presentations and states without an available conversion factor (Figure X). This highlights an important data gap issue for calculating hake catch.  
 
 ![Time series of Hake tonnes landed by product form (colored lines) and estimated catch (black lines) using the Member State (dotted) versus the EU (dashed) conversion factor for Portugal (A) and Norway (B)](Images/Section - EU Fishery Case Studies/Proposed Final Plots/Time Series Country vs EU values/hake_country_vs_EU_multipanel.png)
 
