@@ -10,5 +10,5 @@ For cod Norway: largest gap in 2014 for 13835 tons
 
 For Min vs Max time series, ADD THIS TO TEXT:
 • For hake: largest gap in 2015 of 6461 tonnes
-• For monkfish: largest gap in 2017 of 14188 tonnes
-For hake: largest gap in 2015 of 12273 tonns
+• For monkfish: largest gap in 2017 of 418 tonnes
+* For cod: largest gap in 2015 of 12273 tonns
