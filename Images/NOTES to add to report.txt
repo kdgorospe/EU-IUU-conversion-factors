@@ -1,0 +1,14 @@
+NOTES to ADD TO REPORT:
+
+* 971 out of 1600 top 50 species are missing data (i.e., 60.7%)
+
+For Country vs EU Time series, ADD THIS TO TEXT:
+• For hake Portugal: largest gap in 2009 of 2.47 tons
+• For hake Norway: largest gap is in 2016 for 305 tons
+• For cod Portugal: largest gap in 2011 for 2096 tons
+For cod Norway: largest gap in 2014 for 13835 tons
+
+For Min vs Max time series, ADD THIS TO TEXT:
+• For hake: largest gap in 2015 of 6461 tonnes
+• For monkfish: largest gap in 2017 of 14188 tonnes
+For hake: largest gap in 2015 of 12273 tonns
