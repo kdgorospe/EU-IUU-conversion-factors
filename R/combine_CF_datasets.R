@@ -92,7 +92,7 @@ write.csv(unique_processing, file = file.path(outdir, "type_of_processing_list.c
 # Ignore type_of_processing that are not part of EU_cf states (only consider alive, fresh, frozen)
 # Ignore anything salted - too ambiguous to translate to EU_cf codes
 
-align_to_eu <- read.csv(file.path(outdir, "type_of_processing_list_with_EU_codes.csv"))
+align_to_eu <- read.csv(file.path(indir, "type_of_processing_list_with_EU_codes.csv"))
 align_to_eu_clean <- align_to_eu %>%
   filter(presentation != "")
 

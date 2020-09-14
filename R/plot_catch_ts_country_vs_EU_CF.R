@@ -31,9 +31,10 @@ library(gtable) # ggplotGrob
 # MacOS:
 # Data folders:
 datadir <- "/Volumes/jgephart/ARTIS/Data"
-artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
 outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+# Input folder:
+indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
 # Windows:
 #datadir <- "K:/ARTIS/Data"

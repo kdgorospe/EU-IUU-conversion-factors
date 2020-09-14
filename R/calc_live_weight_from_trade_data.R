@@ -17,9 +17,10 @@ library(data.table) # rbindlist
 # Data folders:
 datadir <- "/Volumes/jgephart/ARTIS/Data"
 trade_datadir <- "Data/Trade Data"
-artis_outputs <- "/Volumes/jgephart/ARTIS/Outputs"
 # Output folder:
 outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+# Input folder:
+indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
 # Read in all CF and trade data:
 hs_taxa_cf_match <- read.csv(file.path(trade_datadir, "2020-09-10_hs-taxa-CF_strict-match.csv"))
