@@ -9,6 +9,7 @@
 rm(list=ls())
 library(tidyverse)
 library(ggplot2)
+library(ggpubr)
 library(rfishbase)
 library(countrycode)
 library(data.table) # rbindlist
@@ -377,7 +378,7 @@ print(p)
 ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full.png"), width = 8.5, height = 11)
 
 # Provide raw data for EU IUU Coalition
-write.csv(cf_case_data_4 %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data_FULL.csv"), quote = FALSE, row.names = FALSE)
+write.csv(cf_case_data_4 %>% mutate_all(~str_remove_all(., pattern = ",")) %>% select(-c(n_CF, note, match_combo, x_labels, min_in_group, max_cf_relative)), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data_FULL.csv"), quote = FALSE, row.names = FALSE)
 
 
 # Reorder by range in CF values
@@ -404,7 +405,7 @@ p <- ggplot(data = cf_case_data_4 %>%
 
 print(p)
 # Standard letter size paper:
-ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered.png"), width = 8.5, height = 11)
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered.tiff"), width = 8.5, height = 11)
 
 
 # Limit to top 50 - not elegant - just identified the value for "range_in_group" that gives us the top 50
@@ -435,7 +436,92 @@ p <- ggplot(data = cf_case_data_4 %>%
 
 print(p)
 # Standard letter size paper:
+ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered-top50.tiff"), width = 8.5, height = 11)
 ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered-top50.png"), width = 8.5, height = 11)
+
+# LIMIT TO JUST COD, HAKE, MONKFISH, HADDOCK, SWORDFISH, LING
+
+case_species <- c("Lophiidae", "Gadus morhua", "Molva molva", "Xiphias gladius", "Merluccius merluccius")
+
+# Standardize axes:
+max_cf <- 3.25 # Lophiidae
+min_cf <- 1.1 
+
+for (i in 1:length(case_species)) {
+
+  
+  p <- ggplot(data = cf_case_data_4 %>%
+                filter(scientific_name == case_species[i]) %>%
+                mutate(continent_affiliation = case_when(continent_affiliation == "other" ~ "non-EU",
+                                                         continent_affiliation == "European, non-EU" ~ "non-EU",
+                                                         TRUE ~ continent_affiliation)) %>% # Do this to remove "other" affiliation from legend
+                mutate(landings_code = as.factor(landings_code)) %>%
+                mutate(landings_code = fct_reorder(landings_code, range_in_group)) %>%
+                arrange(range_in_group) %>% filter(range_in_group >= 0.0900), mapping = aes(x = landings_code, y = conversion_factor)) +
+    geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+    geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+    ylim(min_cf, max_cf) +
+    labs(title = case_species[i], x = "State, Preparation", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+    scale_color_manual(values = group.colors) + 
+    scale_shape_manual(values = group.shapes) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 10),
+          axis.title = element_text(size = 14),
+          plot.title = element_text(size = 24, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 12),
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
+    coord_flip() 
+  print(p)
+  ggsave(file.path(outdir, paste("absolute-cf_", case_species[i], "_standard-axis.png", sep = "")), width = 8.5, height = 3)
+  ggsave(file.path(outdir, paste("absolute-cf_", case_species[i], "_standard-axis.tiff", sep = "")), width = 8.5, height = 3)
+}
+
+# NEXT ARRANGE AS PANELS ON A SINGLE PAGE
+for (i in 1:length(case_species)) {
+  
+  p <- ggplot(data = cf_case_data_4 %>%
+                filter(scientific_name == case_species[i]) %>%
+                mutate(continent_affiliation = case_when(continent_affiliation == "other" ~ "non-EU",
+                                                         continent_affiliation == "European, non-EU" ~ "non-EU",
+                                                         TRUE ~ continent_affiliation)) %>% # Do this to remove "other" affiliation from legend
+                mutate(landings_code = as.factor(landings_code)) %>%
+                mutate(landings_code = fct_reorder(landings_code, range_in_group)) %>%
+                arrange(range_in_group) %>% filter(range_in_group >= 0.0900), mapping = aes(x = landings_code, y = conversion_factor)) +
+    geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+    geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+    ylim(min_cf, max_cf) +
+    labs(title = case_species[i], x = "", y = "", color = "EU affiliation", shape = "CF implementation") +
+    scale_color_manual(values = group.colors) + 
+    scale_shape_manual(values = group.shapes) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 10),
+          axis.title = element_text(size = 14),
+          plot.title = element_text(size = 24, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 12),
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
+    coord_flip() 
+  assign(paste("p_", str_replace(case_species[i], " ", "_"), sep = ""), p)
+}
+
+all_species_p <- ggarrange(p_Gadus_morhua, p_Lophiidae, p_Merluccius_merluccius, p_Molva_molva, p_Xiphias_gladius, 
+                           ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
+
+# Annotate the figure by adding a common labels
+annotate_figure(all_species_p,
+                left = text_grob("State, Presentation", rot = 90))
+
+ggsave(file.path(outdir, paste("absolute-cf_all-case-species.png", sep = "")), width = 11, height = 6)
+ggsave(file.path(outdir, paste("absolute-cf_all-case-species.tiff", sep = "")), width = 11, height = 4)
 
 
 
@@ -523,11 +609,90 @@ p <- ggplot(data = cf_case_data_4 %>%
 
 print(p)
 ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full_reordered_top50.png"), width = 8.5, height = 11)
+ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full_reordered_top50.tiff"), width = 8.5, height = 11)
 
 
+# DO RELATIVE CF VALUE PLOTS FOR JUST COD, HAKE, MONKFISH, HADDOCK, SWORDFISH, LING
 
+case_species <- c("Lophiidae", "Gadus morhua", "Molva molva", "Xiphias gladius", "Merluccius merluccius")
+# Standardize axes:
+max_cf <- 2.8 # Lophiidae
+min_cf <- 1.0
 
+for (i in 1:length(case_species)) {
 
+  
+  p <- ggplot(data = cf_case_data_4 %>%
+                filter(scientific_name == case_species[i]) %>%
+                mutate(continent_affiliation = case_when(continent_affiliation == "other" ~ "non-EU",
+                                                         continent_affiliation == "European, non-EU" ~ "non-EU",
+                                                         TRUE ~ continent_affiliation)) %>% # Do this to remove "other" affiliation from legend
+                mutate(landings_code = as.factor(landings_code)) %>%
+                mutate(landings_code = fct_reorder(landings_code, max_cf_relative)) %>%
+                arrange(max_cf_relative) %>% filter(max_cf_relative >= 0.0900), mapping = aes(x = landings_code, y = cf_relative)) +
+    geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+    geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+    ylim(min_cf, max_cf) +
+    labs(title = case_species[i], x = "State, Preparation", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
+    scale_color_manual(values = group.colors) + 
+    scale_shape_manual(values = group.shapes) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 10),
+          axis.title = element_text(size = 14),
+          plot.title = element_text(size = 24, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 12),
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
+    coord_flip() 
+  print(p)
+  ggsave(file.path(outdir, paste("relative-cf_", case_species[i], "_standard-axis.png", sep = "")), width = 8.5, height = 3)
+  ggsave(file.path(outdir, paste("relative-cf_", case_species[i], "_standard-axis.tiff", sep = "")), width = 8.5, height = 3)
+}
+
+# NEXT ARRANGE AS PANELS ON A SINGLE PAGE
+for (i in 1:length(case_species)) {
+  p <- ggplot(data = cf_case_data_4 %>%
+                filter(scientific_name == case_species[i]) %>%
+                mutate(continent_affiliation = case_when(continent_affiliation == "other" ~ "non-EU",
+                                                         continent_affiliation == "European, non-EU" ~ "non-EU",
+                                                         TRUE ~ continent_affiliation)) %>% # Do this to remove "other" affiliation from legend
+                mutate(landings_code = as.factor(landings_code)) %>%
+                mutate(landings_code = fct_reorder(landings_code, max_cf_relative)) %>%
+                arrange(max_cf_relative) %>% filter(max_cf_relative >= 0.0900), mapping = aes(x = landings_code, y = cf_relative)) +
+    geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
+    geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+    ylim(min_cf, max_cf) +
+    labs(title = case_species[i], x = "", y = "", color = "EU affiliation", shape = "CF implementation") +
+    scale_color_manual(values = group.colors) + 
+    scale_shape_manual(values = group.shapes) +
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 10),
+          axis.title = element_text(size = 14),
+          plot.title = element_text(size = 24, hjust = 0),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.box.just = "left",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 12),
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
+    coord_flip() 
+  assign(paste("p_", str_replace(case_species[i], " ", "_"), sep = ""), p)
+}
+
+all_species_p <- ggarrange(p_Gadus_morhua, p_Lophiidae, p_Merluccius_merluccius, p_Molva_molva, p_Xiphias_gladius, 
+                           ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
+
+# Annotate the figure by adding a common labels
+annotate_figure(all_species_p,
+                left = text_grob("State, Presentation", rot = 90))
+
+ggsave(file.path(outdir, paste("relative-cf_all-case-species.png", sep = "")), width = 11, height = 6)
+ggsave(file.path(outdir, paste("relative-cf_all-case-species.tiff", sep = "")), width = 11, height = 4)
 ############################################################################################################
 # Step 7: Use landings data and CF values to back-calculate nominal catch
 # Use cf_case_data_3 as list of case studies (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
