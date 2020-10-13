@@ -15,17 +15,18 @@ library(data.table) # rbindlist
 
 # MacOS:
 # Data folders:
-datadir <- "/Volumes/jgephart/ARTIS/Data"
+#datadir <- "/Volumes/jgephart/ARTIS/Data"
 # Output folder:
-outdir <- "/Volumes/jgephart/EU IUU/Outputs"
+#outdir <- "/Volumes/jgephart/EU IUU/Outputs"
 # Input folder:
-indir <- "/Volumes/jgephart/EU IUU/Inputs"
+#indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
 # Windows:
-#datadir <- "K:/ARTIS/Data"
-#artis_outputs <- "K:/ARTIS/Outputs"
+datadir <- "K:/ARTIS/Data"
 # Output folder:
-#outdir <- "K:/EU IUU/Outputs"
+outdir <- "K:/EU IUU/Outputs"
+# Input folder:
+indir <- "K:/EU IUU/Inputs"
 ############################################################################################################
 # Step 1 - clean and output merged data
 # Recode states and presentations 
