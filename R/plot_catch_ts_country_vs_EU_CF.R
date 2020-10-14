@@ -38,9 +38,10 @@ indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
 # Windows:
 #datadir <- "K:/ARTIS/Data"
-#artis_outputs <- "K:/ARTIS/Outputs"
 # Output folder:
 #outdir <- "K:/EU IUU/Outputs"
+# Input folder:
+#indir <- "K:/EU IUU/Inputs"
 
 ############################################################################################################
 # Step 1: Get CF data and Landings data
@@ -286,24 +287,18 @@ for(i in 1:length(country_list)){
 
 # ARRANGE SPECIFIC PLOTS INTO MULTIPANEL GRID - CLUNKY change i, j, then run all the way through to save plot function then repeat with new i, j
 # Note: when saving Portugal comment out line for "summed catch" in plot and move linetype to outside of aes(), manually adjust color
-# For Portugal, hake 
-i = 19
-j = 1
+# For Norway, run line for "summed catch" and move linetype to inside of aes()
 
-# For Norway, hake, run line for "summed catch" and move linetype to inside of aes()
-i = 17
-j = 1
+##########################################################################################################################################
+##########################################################################################################################################
+##########################################################################################################################################
+# FIGURE 6: Portugal + Norway - cod
 
 # For Portugal, cod
 i = 19
 j = 3
 
-# For Norway, cod
-i = 17
-j = 3
 
-# Do this loop for all nationality_of_vessel %in% EU countries and for species %in% cod, hake, monkfish:
-# FIX IT - clean up code; a lot of this is unnecessary plotting
 landings_all_pres <- landings_dat %>%
   filter(nationality_of_vessel == country_list[i]) %>%
   filter(scientific_name == species_list[j]) %>%
@@ -407,8 +402,421 @@ total_catch_national_compare %>%
   rename(national_catch = total_catch.x,
          EU_catch = total_catch.y) %>%
   mutate(difference = national_catch - EU_catch)
-  
 
+size_for_common_lines <- 1
+
+p_portugal_cod <- ggplot() +
+  # Just the landings (no catch calculation)
+  geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
+  geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch), linetype = "dotted", size = size_for_common_lines) +
+  geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch), linetype = "dashed", size = size_for_common_lines) +
+  scale_color_manual(name = "presentation (net weight)", values = c("#F8766D", "#00BA38", "#619CFF")) +
+  #scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
+  labs(x = "", y = "tonnes", title = "A") +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) 
+
+plot(p_portugal_cod)
+
+##########################################################################################################################################
+# For Norway, cod
+i = 17
+j = 3
+
+
+landings_all_pres <- landings_dat %>%
+  filter(nationality_of_vessel == country_list[i]) %>%
+  filter(scientific_name == species_list[j]) %>%
+  # Get species, presentation, and country-specific CF values
+  left_join(cf_data_full, by = c("presentation" = "landings_code", "iso3c", "scientific_name")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, year, value, iso3c, conversion_factor, reference) %>%
+  rename(national_CF = conversion_factor,
+         national_ref = reference,
+         vessel_iso3c = iso3c) %>%
+  # Get species, presentation, EU-wide CF value:
+  left_join(eu_wide_cf_full, by = c("scientific_name", "presentation" = "landings_code")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, vessel_iso3c, year, value,  national_CF, national_ref, conversion_factor, reference) %>%
+  rename(EU_wide_CF = conversion_factor,
+         EU_ref = reference) %>%
+  #mutate(catch_by_national_CF = national_CF * value,
+  #       catch_by_EU_CF = EU_wide_CF * value) %>%
+  # Sum within presentation forms (each line is a landing by a vessel in a reporting country, resulting in multiple presentation forms)
+  # Then multiply by national vs EU_wide CF values to get nominal catch
+  group_by_at(setdiff(names(.), "value")) %>% # group by all columns except landings
+  summarize(landings = sum(value, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_by_national_CF = landings * national_CF,
+         catch_by_EU_wide_CF = landings * EU_wide_CF)
+
+# Check that there is only one type of presentation form per year:
+landings_all_pres %>%
+  group_by(presentation, year) %>%
+  summarise(n_pres = n()) %>%
+  filter(n_pres > 1)
+
+
+## TOO many presentation forms: Create a column for grouping presentations based on whether or not they have a national CF value (too many different types of presentations to display on graph)
+landings_with_national_CF <- landings_all_pres %>%
+  # PLAN TO HAVE THESE LISTED AS A SIDE BAR ON THE GRAPH
+  mutate(presentation_national = if_else(is.na(national_CF), true = "no national CF value", false = presentation)) %>%
+  # Do the same for whether or not a presentation has an EU_wide CF value
+  #mutate(presentation_EU_wide = if_else(is.na(catch_by_EU_CF)==FALSE, true = presentation, false = "no EU-wide CF value")) %>%
+  # AGGREGATE with this new presentation grouping, i.e., add original presentation column to list of cols NOT to group by (setdiff)
+  group_by_at(setdiff(names(.), c("presentation", "landings", "EU_wide_CF", "EU_ref", "catch_by_EU_wide_CF"))) %>% 
+  summarize(landings = sum(landings, na.rm = TRUE),
+            catch_by_national_CF = sum(catch_by_national_CF, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_vs_unaccounted = if_else(presentation_national == "no national CF value", true = "unaccounted", false = "catch"))
+
+
+## DO THE SAME BUT USING EU-WIDE CF VALUES: 
+# Create a column for grouping presentations based on whether or not they have a EU wide CF value
+landings_with_EU_wide_CF <- landings_all_pres %>%
+  # PLAN TO HAVE THESE LISTED AS A SIDE BAR ON THE GRAPH
+  mutate(presentation_EU_wide = if_else(is.na(EU_wide_CF), true = "no EU-wide CF value", false = presentation)) %>%
+  # Do the same for whether or not a presentation has an EU_wide CF value
+  #mutate(presentation_EU_wide = if_else(is.na(catch_by_EU_CF)==FALSE, true = presentation, false = "no EU-wide CF value")) %>%
+  # AGGREGATE with this new presentation grouping, i.e., add original presentation column to list of cols NOT to group by (setdiff)
+  group_by_at(setdiff(names(.), c("presentation", "landings", "national_CF", "national_ref", "catch_by_national_CF"))) %>% 
+  summarize(landings = sum(landings, na.rm = TRUE),
+            catch_by_EU_wide_CF = sum(catch_by_EU_wide_CF, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_vs_unaccounted = if_else(presentation_EU_wide == "no EU-wide CF value", true = "unaccounted", false = "catch")) 
+
+# NOW COMBINE ALL INTO ONE PLOT:
+# The only way to meaningfully compare any discrepancy in total catch between national vs EU CF values is to only look at those presentations that are common to both
+pres_intersect <- intersect(unique(landings_with_national_CF$presentation_national), unique(landings_with_EU_wide_CF$presentation_EU_wide))
+
+# Get landings presentations that are common to EU and national CF values
+national_CF_compare <- landings_with_national_CF %>%
+  filter(presentation_national %in% pres_intersect)
+
+EU_wide_CF_compare <- landings_with_EU_wide_CF %>%
+  filter(presentation_EU_wide %in% pres_intersect)
+
+# Create skeletal dataframe to allow for years with no data to be filled in with "0"
+plot_grid <- expand.grid(seq(2007, 2018, by = 1),
+                         unique(national_CF_compare$presentation_national))
+names(plot_grid) <- c("year", "presentation")
+
+# Join national and EU dataframes back with plot_grid to get full time series:
+national_CF_compare<- plot_grid %>%
+  left_join(national_CF_compare, by = c("year", "presentation" = "presentation_national")) %>%
+  mutate(landings = replace_na(landings, replace = 0),
+         catch_by_national_CF = replace_na(catch_by_national_CF, replace = 0))
+
+EU_wide_CF_compare<- plot_grid %>%
+  left_join(EU_wide_CF_compare, by = c("year", "presentation" = "presentation_EU_wide")) %>%
+  mutate(landings = replace_na(landings, replace = 0),
+         catch_by_EU_wide_CF = replace_na(catch_by_EU_wide_CF, replace = 0))
+
+# Get total nominal catch for EU vs national CF values
+total_catch_national_compare <- national_CF_compare %>%
+  group_by(year) %>%
+  summarize(total_catch = sum(catch_by_national_CF, na.rm = TRUE)) %>%
+  ungroup()
+
+total_catch_EU_wide_compare <- EU_wide_CF_compare %>%
+  group_by(year) %>%
+  summarize(total_catch = sum(catch_by_EU_wide_CF)) %>%
+  ungroup()
+
+# Identify where there is the largest absolute difference in national vs EU
+total_catch_national_compare %>%
+  left_join(total_catch_EU_wide_compare, by = "year") %>%
+  rename(national_catch = total_catch.x,
+         EU_catch = total_catch.y) %>%
+  mutate(difference = national_catch - EU_catch)
+
+size_for_common_lines <- 1
+
+
+p_norway_cod <- ggplot() +
+  # Just the landings (no catch calculation)
+  geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
+  geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch, linetype = "dotted"), size = size_for_common_lines) +
+  geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch, linetype = "dashed"), size = size_for_common_lines) +
+  scale_color_manual(name = "presentation (net weight)", values = c("violet", "darkorange")) +
+  scale_linetype_manual(name = "estimated catch (nominal weight)", values = c("dashed", "dotted"), labels = c("by EU CF value", "by national CF value")) +
+  labs(x = "", y = "tonnes", title = "B") +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) 
+
+plot(p_norway_cod)
+
+g3 <- ggplotGrob(p_portugal_cod)
+g4 <- ggplotGrob(p_norway_cod)
+g_cod <- rbind(g3, g4)
+plot(g_cod)
+
+ggsave(file = file.path(outdir, "Figure-6.png"), g_cod, device = "png", width = 9, height = 7)
+ggsave(file = file.path(outdir, "Figure-6.tiff"), g_cod, device = "tiff", width = 9, height = 7)
+
+
+
+
+
+
+##########################################################################################################################################
+##########################################################################################################################################
+##########################################################################################################################################
+# FIGURE 9: Portugal + Norway - hake
+
+# PORTUGAL, HAKE:
+i = 19
+j = 1
+
+landings_all_pres <- landings_dat %>%
+  filter(nationality_of_vessel == country_list[i]) %>%
+  filter(scientific_name == species_list[j]) %>%
+  # Get species, presentation, and country-specific CF values
+  left_join(cf_data_full, by = c("presentation" = "landings_code", "iso3c", "scientific_name")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, year, value, iso3c, conversion_factor, reference) %>%
+  rename(national_CF = conversion_factor,
+         national_ref = reference,
+         vessel_iso3c = iso3c) %>%
+  # Get species, presentation, EU-wide CF value:
+  left_join(eu_wide_cf_full, by = c("scientific_name", "presentation" = "landings_code")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, vessel_iso3c, year, value,  national_CF, national_ref, conversion_factor, reference) %>%
+  rename(EU_wide_CF = conversion_factor,
+         EU_ref = reference) %>%
+  #mutate(catch_by_national_CF = national_CF * value,
+  #       catch_by_EU_CF = EU_wide_CF * value) %>%
+  # Sum within presentation forms (each line is a landing by a vessel in a reporting country, resulting in multiple presentation forms)
+  # Then multiply by national vs EU_wide CF values to get nominal catch
+  group_by_at(setdiff(names(.), "value")) %>% # group by all columns except landings
+  summarize(landings = sum(value, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_by_national_CF = landings * national_CF,
+         catch_by_EU_wide_CF = landings * EU_wide_CF)
+
+# Check that there is only one type of presentation form per year:
+landings_all_pres %>%
+  group_by(presentation, year) %>%
+  summarise(n_pres = n()) %>%
+  filter(n_pres > 1)
+
+
+## TOO many presentation forms: Create a column for grouping presentations based on whether or not they have a national CF value (too many different types of presentations to display on graph)
+landings_with_national_CF <- landings_all_pres %>%
+  # PLAN TO HAVE THESE LISTED AS A SIDE BAR ON THE GRAPH
+  mutate(presentation_national = if_else(is.na(national_CF), true = "no national CF value", false = presentation)) %>%
+  # Do the same for whether or not a presentation has an EU_wide CF value
+  #mutate(presentation_EU_wide = if_else(is.na(catch_by_EU_CF)==FALSE, true = presentation, false = "no EU-wide CF value")) %>%
+  # AGGREGATE with this new presentation grouping, i.e., add original presentation column to list of cols NOT to group by (setdiff)
+  group_by_at(setdiff(names(.), c("presentation", "landings", "EU_wide_CF", "EU_ref", "catch_by_EU_wide_CF"))) %>% 
+  summarize(landings = sum(landings, na.rm = TRUE),
+            catch_by_national_CF = sum(catch_by_national_CF, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_vs_unaccounted = if_else(presentation_national == "no national CF value", true = "unaccounted", false = "catch"))
+
+
+## DO THE SAME BUT USING EU-WIDE CF VALUES: 
+# Create a column for grouping presentations based on whether or not they have a EU wide CF value
+landings_with_EU_wide_CF <- landings_all_pres %>%
+  # PLAN TO HAVE THESE LISTED AS A SIDE BAR ON THE GRAPH
+  mutate(presentation_EU_wide = if_else(is.na(EU_wide_CF), true = "no EU-wide CF value", false = presentation)) %>%
+  # Do the same for whether or not a presentation has an EU_wide CF value
+  #mutate(presentation_EU_wide = if_else(is.na(catch_by_EU_CF)==FALSE, true = presentation, false = "no EU-wide CF value")) %>%
+  # AGGREGATE with this new presentation grouping, i.e., add original presentation column to list of cols NOT to group by (setdiff)
+  group_by_at(setdiff(names(.), c("presentation", "landings", "national_CF", "national_ref", "catch_by_national_CF"))) %>% 
+  summarize(landings = sum(landings, na.rm = TRUE),
+            catch_by_EU_wide_CF = sum(catch_by_EU_wide_CF, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_vs_unaccounted = if_else(presentation_EU_wide == "no EU-wide CF value", true = "unaccounted", false = "catch")) 
+
+# NOW COMBINE ALL INTO ONE PLOT:
+# The only way to meaningfully compare any discrepancy in total catch between national vs EU CF values is to only look at those presentations that are common to both
+pres_intersect <- intersect(unique(landings_with_national_CF$presentation_national), unique(landings_with_EU_wide_CF$presentation_EU_wide))
+
+# Get landings presentations that are common to EU and national CF values
+national_CF_compare <- landings_with_national_CF %>%
+  filter(presentation_national %in% pres_intersect)
+
+EU_wide_CF_compare <- landings_with_EU_wide_CF %>%
+  filter(presentation_EU_wide %in% pres_intersect)
+
+# Create skeletal dataframe to allow for years with no data to be filled in with "0"
+plot_grid <- expand.grid(seq(2007, 2018, by = 1),
+                         unique(national_CF_compare$presentation_national))
+names(plot_grid) <- c("year", "presentation")
+
+# Join national and EU dataframes back with plot_grid to get full time series:
+national_CF_compare<- plot_grid %>%
+  left_join(national_CF_compare, by = c("year", "presentation" = "presentation_national")) %>%
+  mutate(landings = replace_na(landings, replace = 0),
+         catch_by_national_CF = replace_na(catch_by_national_CF, replace = 0))
+
+EU_wide_CF_compare<- plot_grid %>%
+  left_join(EU_wide_CF_compare, by = c("year", "presentation" = "presentation_EU_wide")) %>%
+  mutate(landings = replace_na(landings, replace = 0),
+         catch_by_EU_wide_CF = replace_na(catch_by_EU_wide_CF, replace = 0))
+
+# Get total nominal catch for EU vs national CF values
+total_catch_national_compare <- national_CF_compare %>%
+  group_by(year) %>%
+  summarize(total_catch = sum(catch_by_national_CF, na.rm = TRUE)) %>%
+  ungroup()
+
+total_catch_EU_wide_compare <- EU_wide_CF_compare %>%
+  group_by(year) %>%
+  summarize(total_catch = sum(catch_by_EU_wide_CF)) %>%
+  ungroup()
+
+# Identify where there is the largest absolute difference in national vs EU
+total_catch_national_compare %>%
+  left_join(total_catch_EU_wide_compare, by = "year") %>%
+  rename(national_catch = total_catch.x,
+         EU_catch = total_catch.y) %>%
+  mutate(difference = national_catch - EU_catch)
+
+size_for_common_lines <- 1
+
+p_portugal_hake <- ggplot() +
+  # Just the landings (no catch calculation)
+  geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
+  geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch), linetype = "dotted", size = size_for_common_lines) +
+  geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch), linetype = "dashed", size = size_for_common_lines) +
+  scale_color_manual(name = "presentation (net weight)", values = c("slateblue2")) +
+  #scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
+  labs(x = "", y = "tonnes", title = "A") +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) 
+
+plot(p_portugal_hake)
+
+##########################################################################################################################################
+# NORWAY, HAKE
+i = 17
+j = 1
+
+landings_all_pres <- landings_dat %>%
+  filter(nationality_of_vessel == country_list[i]) %>%
+  filter(scientific_name == species_list[j]) %>%
+  # Get species, presentation, and country-specific CF values
+  left_join(cf_data_full, by = c("presentation" = "landings_code", "iso3c", "scientific_name")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, year, value, iso3c, conversion_factor, reference) %>%
+  rename(national_CF = conversion_factor,
+         national_ref = reference,
+         vessel_iso3c = iso3c) %>%
+  # Get species, presentation, EU-wide CF value:
+  left_join(eu_wide_cf_full, by = c("scientific_name", "presentation" = "landings_code")) %>%
+  select(common_name, scientific_name, presentation, nationality_of_vessel, vessel_iso3c, year, value,  national_CF, national_ref, conversion_factor, reference) %>%
+  rename(EU_wide_CF = conversion_factor,
+         EU_ref = reference) %>%
+  #mutate(catch_by_national_CF = national_CF * value,
+  #       catch_by_EU_CF = EU_wide_CF * value) %>%
+  # Sum within presentation forms (each line is a landing by a vessel in a reporting country, resulting in multiple presentation forms)
+  # Then multiply by national vs EU_wide CF values to get nominal catch
+  group_by_at(setdiff(names(.), "value")) %>% # group by all columns except landings
+  summarize(landings = sum(value, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_by_national_CF = landings * national_CF,
+         catch_by_EU_wide_CF = landings * EU_wide_CF)
+
+# Check that there is only one type of presentation form per year:
+landings_all_pres %>%
+  group_by(presentation, year) %>%
+  summarise(n_pres = n()) %>%
+  filter(n_pres > 1)
+
+
+## TOO many presentation forms: Create a column for grouping presentations based on whether or not they have a national CF value (too many different types of presentations to display on graph)
+landings_with_national_CF <- landings_all_pres %>%
+  # PLAN TO HAVE THESE LISTED AS A SIDE BAR ON THE GRAPH
+  mutate(presentation_national = if_else(is.na(national_CF), true = "no national CF value", false = presentation)) %>%
+  # Do the same for whether or not a presentation has an EU_wide CF value
+  #mutate(presentation_EU_wide = if_else(is.na(catch_by_EU_CF)==FALSE, true = presentation, false = "no EU-wide CF value")) %>%
+  # AGGREGATE with this new presentation grouping, i.e., add original presentation column to list of cols NOT to group by (setdiff)
+  group_by_at(setdiff(names(.), c("presentation", "landings", "EU_wide_CF", "EU_ref", "catch_by_EU_wide_CF"))) %>% 
+  summarize(landings = sum(landings, na.rm = TRUE),
+            catch_by_national_CF = sum(catch_by_national_CF, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_vs_unaccounted = if_else(presentation_national == "no national CF value", true = "unaccounted", false = "catch"))
+
+
+## DO THE SAME BUT USING EU-WIDE CF VALUES: 
+# Create a column for grouping presentations based on whether or not they have a EU wide CF value
+landings_with_EU_wide_CF <- landings_all_pres %>%
+  # PLAN TO HAVE THESE LISTED AS A SIDE BAR ON THE GRAPH
+  mutate(presentation_EU_wide = if_else(is.na(EU_wide_CF), true = "no EU-wide CF value", false = presentation)) %>%
+  # Do the same for whether or not a presentation has an EU_wide CF value
+  #mutate(presentation_EU_wide = if_else(is.na(catch_by_EU_CF)==FALSE, true = presentation, false = "no EU-wide CF value")) %>%
+  # AGGREGATE with this new presentation grouping, i.e., add original presentation column to list of cols NOT to group by (setdiff)
+  group_by_at(setdiff(names(.), c("presentation", "landings", "national_CF", "national_ref", "catch_by_national_CF"))) %>% 
+  summarize(landings = sum(landings, na.rm = TRUE),
+            catch_by_EU_wide_CF = sum(catch_by_EU_wide_CF, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(catch_vs_unaccounted = if_else(presentation_EU_wide == "no EU-wide CF value", true = "unaccounted", false = "catch")) 
+
+# NOW COMBINE ALL INTO ONE PLOT:
+# The only way to meaningfully compare any discrepancy in total catch between national vs EU CF values is to only look at those presentations that are common to both
+pres_intersect <- intersect(unique(landings_with_national_CF$presentation_national), unique(landings_with_EU_wide_CF$presentation_EU_wide))
+
+# Get landings presentations that are common to EU and national CF values
+national_CF_compare <- landings_with_national_CF %>%
+  filter(presentation_national %in% pres_intersect)
+
+EU_wide_CF_compare <- landings_with_EU_wide_CF %>%
+  filter(presentation_EU_wide %in% pres_intersect)
+
+# Create skeletal dataframe to allow for years with no data to be filled in with "0"
+plot_grid <- expand.grid(seq(2007, 2018, by = 1),
+                         unique(national_CF_compare$presentation_national))
+names(plot_grid) <- c("year", "presentation")
+
+# Join national and EU dataframes back with plot_grid to get full time series:
+national_CF_compare<- plot_grid %>%
+  left_join(national_CF_compare, by = c("year", "presentation" = "presentation_national")) %>%
+  mutate(landings = replace_na(landings, replace = 0),
+         catch_by_national_CF = replace_na(catch_by_national_CF, replace = 0))
+
+EU_wide_CF_compare<- plot_grid %>%
+  left_join(EU_wide_CF_compare, by = c("year", "presentation" = "presentation_EU_wide")) %>%
+  mutate(landings = replace_na(landings, replace = 0),
+         catch_by_EU_wide_CF = replace_na(catch_by_EU_wide_CF, replace = 0))
+
+# Get total nominal catch for EU vs national CF values
+total_catch_national_compare <- national_CF_compare %>%
+  group_by(year) %>%
+  summarize(total_catch = sum(catch_by_national_CF, na.rm = TRUE)) %>%
+  ungroup()
+
+total_catch_EU_wide_compare <- EU_wide_CF_compare %>%
+  group_by(year) %>%
+  summarize(total_catch = sum(catch_by_EU_wide_CF)) %>%
+  ungroup()
+
+# Identify where there is the largest absolute difference in national vs EU
+total_catch_national_compare %>%
+  left_join(total_catch_EU_wide_compare, by = "year") %>%
+  rename(national_catch = total_catch.x,
+         EU_catch = total_catch.y) %>%
+  mutate(difference = national_catch - EU_catch)
 
 size_for_common_lines <- 1
 
@@ -417,7 +825,8 @@ p_norway_hake <- ggplot() +
   geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
   geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch, linetype = "dotted"), size = size_for_common_lines) +
   geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch, linetype = "dashed"), size = size_for_common_lines) +
-  scale_linetype_manual(name = "summed catch", values = c("dashed", "dotted"), labels = c("by EU CF value", "by national CF value")) +
+  scale_color_manual(name = "presentation (net weight)", values = c("#F8766D", "#00BFC4")) +
+  scale_linetype_manual(name = "estimated catch (nominal weight)", values = c("dashed", "dotted"), labels = c("by EU CF value", "by national CF value")) +
   labs(x = "", y = "tonnes", title = "B") +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 12),
@@ -430,146 +839,15 @@ p_norway_hake <- ggplot() +
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12)) 
 
-p_portugal_hake <- ggplot() +
-  # Just the landings (no catch calculation)
-  geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
-  geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch), linetype = "dotted", size = size_for_common_lines) +
-  geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch), linetype = "dashed", size = size_for_common_lines) +
-  scale_color_manual(values = c("slateblue2")) +
-  #scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
-  labs(x = "", y = "tonnes", title = "A") +
-  theme_classic() + 
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_text(size = 18),
-        plot.title = element_text(size = 18, hjust = 0),
-        legend.position = "bottom",
-        legend.box = "vertical",
-        legend.box.just = "left",
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) 
-
-
-p_portugal_cod <- ggplot() +
-  # Just the landings (no catch calculation)
-  geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
-  geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch), linetype = "dotted", size = size_for_common_lines) +
-  geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch), linetype = "dashed", size = size_for_common_lines) +
-  #scale_color_manual(values = c("slateblue2")) +
-  #scale_linetype_manual(name = "summed catch", values = c("dotted", "dashed"), labels = c("by national CF value", "by EU CF value")) +
-  labs(x = "", y = "tonnes", title = "A") +
-  theme_classic() + 
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_text(size = 18),
-        plot.title = element_text(size = 18, hjust = 0),
-        legend.position = "bottom",
-        legend.box = "vertical",
-        legend.box.just = "left",
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) 
-
-p_norway_cod <- ggplot() +
-  # Just the landings (no catch calculation)
-  geom_line(data = national_CF_compare, aes(x = year, y = landings, color = presentation), size = size_for_common_lines) + # Note should be identical to using EU_wide_CF_comapre
-  geom_line(data = total_catch_national_compare, aes(x = year, y = total_catch, linetype = "dotted"), size = size_for_common_lines) +
-  geom_line(data = total_catch_EU_wide_compare, aes(x = year, y = total_catch, linetype = "dashed"), size = size_for_common_lines) +
-  scale_color_manual(values = c("violet", "darkorange")) +
-  scale_linetype_manual(name = "summed catch", values = c("dashed", "dotted"), labels = c("by EU CF value", "by national CF value")) +
-  labs(x = "", y = "tonnes", title = "B") +
-  theme_classic() + 
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_text(size = 18),
-        plot.title = element_text(size = 18, hjust = 0),
-        legend.position = "bottom",
-        legend.box = "vertical",
-        legend.box.just = "left",
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) 
-
-
-
-plot(p_portugal_hake)
 plot(p_norway_hake)
-plot(p_portugal_cod)
-plot(p_norway_cod)
-# GGarrange does not align plots 
-# p <- ggarrange(p_portugal_hake, p_norway_hake, ncol = 1, nrow = 2)
 
+# COMBINE Portugal + Norway hake
 g1 <- ggplotGrob(p_portugal_hake)
 g2 <- ggplotGrob(p_norway_hake)
 g_hake <- rbind(g1, g2)
 plot(g_hake)
 
-ggsave(file = file.path(outdir, "hake_country_vs_EU_multipanel.png"), g_hake, device = "png", width = 9, height = 7)
+ggsave(file = file.path(outdir, "Figure-9.png"), g_hake, device = "png", width = 9, height = 7)
+ggsave(file = file.path(outdir, "Figure-9.tiff"), g_hake, device = "tiff", width = 9, height = 7)
 
-
-g3 <- ggplotGrob(p_portugal_cod)
-g4 <- ggplotGrob(p_norway_cod)
-g_cod <- rbind(g3, g4)
-plot(g_cod)
-
-ggsave(file = file.path(outdir, "cod_country_vs_EU_multipanel.png"), g_cod, device = "png", width = 9, height = 7)
-
-
-
-
-
-
-
-
-
-
-
-# Below is for adding additional time series lines:
-# Now figure out which presentations are unaccounted for by both national and EU-wide CF datasets (need to return to original "landings_all_pres"):
-# no_national_CF <- setdiff(unique(landings_all_pres$presentation), unique(landings_with_national_CF$presentation_national))
-# no_EU_wide_CF <- setdiff(unique(landings_all_pres$presentation), unique(landings_with_EU_wide_CF$presentation_EU_wide))
-# unaccounted_landings <- intersect(no_national_CF, no_EU_wide_CF)
-# no_catch_calculation <- landings_all_pres %>%
-#   filter(presentation %in% unaccounted_landings) %>%
-#   group_by(year) %>%
-#   summarize(total_landings_no_CF = sum(landings)) %>%
-#   ungroup()
-# 
-# # Now figure out which presentations have a national CF value but no EU-wide CF value (and add both landings and nominal catch to graph)
-# only_one_type_CF <- setdiff(no_national_CF, no_EU_wide_CF)
-# only_national_CF <- intersect(only_one_type_CF, no_EU_wide_CF)
-# 
-# # And which presentations only have an EU-wide CF value (and display it's nominal catch)
-# only_EU_wide_CF <- intersect(only_one_type_CF, no_national_CF)
-# 
-# size_for_common_lines <- 1
-
-
-# IF WANT TO INCLUDE PRESENTATIONS FOR WHICH THERE IS NO CATCH CALCULATION (i.e., NO NATIONAL OR EU CF VALUE), ADD THE FOLLOWING LAYER:
-  #geom_line(data = no_catch_calculation, aes(x = year, y = total_landings_no_CF), linetype = "solid", size = size_for_common_lines)
-
-# IF WANT TO INCLUDE PRESENTATION FOR WHICH THERE IS ONLY A NATIONAL CF VALUE:
-# if (length(only_national_CF) > 0){
-#   only_national_catch <- landings_with_national_CF %>%
-#     filter(presentation_national %in% only_national_CF) %>%
-#     group_by(year) %>%
-#     summarize(total_landings_only_national_CF = sum(landings),
-#               total_catch_only_national_CF = sum(catch_by_national_CF)) %>%
-#     ungroup()
-#   p <- p + 
-#     geom_line(data = only_national_catch, aes(x = year, y = total_landings_only_national_CF), color = "tan1", linetype = "solid") +
-#     geom_line(data = only_national_catch, aes(x = year, y = total_catch_only_national_CF), color = "tan1", linetype = "dashed")
-# }
-
-# IF WANT TO INCLUDE PRESENTATIONS FOR WHICH THERE IS ONLY AN EU WIDE CF VALUE:
-# if (length(only_EU_wide_CF) > 0){
-#   only_EU_wide_catch <- landings_with_EU_wide_CF %>%
-#     filter(presentation_EU_wide %in% only_EU_wide_CF) %>%
-#     group_by(year) %>%
-#     summarize(total_landings_only_EU_wide_CF = sum(landings),
-#               total_catch_only_EU_wide_CF = sum(catch_by_EU_wide_CF)) %>%
-#     ungroup()
-#   p <- p + 
-#     geom_line(data = only_EU_wide_catch, aes(x = year, y = total_landings_only_EU_wide_CF), color = "royalblue1", linetype = "solid") +
-#     geom_line(data = only_EU_wide_catch, aes(x = year, y = total_catch_only_EU_wide_CF), color = "royalblue1", linetype = "dashed")
-#   # NOTE: for Merluccius merluccius, whole fish officially only has an EU wide CF value, so plot only shows single solid line, since catch is identical (CF = 1)
-# }
 

@@ -66,13 +66,26 @@ cf_data_possible <- cf_data_full %>%
   arrange(desc(range)) %>%
   ungroup()
 
-############################################################################################################
-# Step 6: Plot all conversion factors that have an EU-wide value 
+cf_data_eu_annex <- cf_data_possible %>% 
+  filter(eu_wide_available == 1) %>%
+  slice_head(n=20) %>%
+  mutate(match_combo = paste(state, presentation, scientific_name, sep = ", "))
+
+# Use cf_case_data_3 for top 20
+cf_case_data_3 <- cf_data_full %>%
+  mutate(match_combo = paste(state, presentation, scientific_name, sep = ", ")) %>%
+  filter(match_combo %in% cf_data_eu_annex$match_combo) %>%
+  mutate(x_labels = paste(scientific_name, " (", paste(state, presentation, sep = ", "), ")", sep = "")) %>%
+  mutate(x_labels = as.factor(x_labels)) %>%
+  # order case studies data from largest to smallest range in cf values (use match function to get index from cf_case_studies$match_combo)
+  arrange(match(match_combo, cf_data_eu_annex$match_combo))
+
 cf_data_eu_annex_all <- cf_data_possible %>% 
   filter(eu_wide_available == 1) %>%
   #slice_head(n=20) %>%
   mutate(match_combo = paste(state, presentation, scientific_name, sep = ", "))
 
+# Use cf_case_data_4 for all CF values
 cf_case_data_4 <- cf_data_full %>%
   mutate(match_combo = paste(state, presentation, scientific_name, sep = ", ")) %>%
   filter(match_combo %in% cf_data_eu_annex_all$match_combo) %>%
@@ -85,10 +98,19 @@ cf_case_data_4 <- cf_data_full %>%
   ungroup() %>%
   mutate(cf_relative = conversion_factor / min_in_group) %>%
   group_by(scientific_name, landings_code) %>%
-  mutate(max_cf_relative = max(cf_relative)) %>%
+  mutate(max_cf_relative = max(cf_relative),
+         max_cf_relative = round(max_cf_relative, digits = 2)) %>%
   ungroup()
 
-# PLOT:
+
+# Provide raw data for EU IUU Coalition
+write.csv(cf_case_data_4 %>% mutate_all(~str_remove_all(., pattern = ",")) %>% select(-c(n_CF, note, match_combo, x_labels, min_in_group, max_cf_relative)), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data_FULL.csv"), quote = FALSE, row.names = FALSE)
+
+
+############################################################################################################
+# Step 6: PLOT
+
+# PLOT top ~50 conversion factors (absolute values) that have an EU-wide value; include range in relative CF values on the margin
 x_labels_as_numeric <- which(levels(cf_case_data_4$x_labels) %in% cf_case_data_4$x_labels)
 group.colors <- c("royalblue1", "tan1", "green4")
 group.shapes <- c(17, 20)
@@ -102,7 +124,13 @@ p <- ggplot(data = cf_case_data_4 %>%
               mutate(x_labels = fct_reorder(x_labels, range_in_group)) %>%
               arrange(range_in_group) %>% filter(range_in_group >= 0.0900), mapping = aes(x = x_labels, y = conversion_factor)) +
   geom_point(aes(color = continent_affiliation, shape = implementation), size = 4) +
-  geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
+  geom_text(aes(y = 3.5,
+                x = x_labels,
+                label = sprintf("%0.2f", max_cf_relative), # forces printing 2 decimal digits
+                hjust = 0.6,
+                vjust = 0.5)) +
+  geom_segment(aes(xend = x_labels, y = -Inf, yend = 3.38), linetype = "dotted") +
+  #geom_vline(xintercept = x_labels_as_numeric, linetype = "dotted") +
   labs(title = "", x = "Species (State, Preparation)", y = "Conversion Factor", color = "EU affiliation", shape = "CF implementation") +
   scale_color_manual(values = group.colors) + 
   scale_shape_manual(values = group.shapes) +
@@ -116,13 +144,17 @@ p <- ggplot(data = cf_case_data_4 %>%
         legend.box.just = "left",
         legend.title = element_text(size = 12),
         legend.text = element_text(size = 12),
-        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt")) +
-  coord_flip() 
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = -15, unit = "pt"),
+        plot.margin = unit(c(1, 3, 1, 1), "lines")) +
+  # coord_cartesian(clip = "off",
+  #                 ylim = c(1, 3.5)) +
+  coord_flip()
 
 print(p)
+
 # Standard letter size paper:
-ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered-top50.tiff"), width = 8.5, height = 11)
-ggsave(file.path(outdir, "case_studies_cf_values_with_eu_annex_values_full_reordered-top50.png"), width = 8.5, height = 11)
+ggsave(file.path(outdir, "Figure-2_with-relative_values.tiff"), width = 8.5, height = 11)
+ggsave(file.path(outdir, "Figure-2_with-relative_values.png"), width = 8.5, height = 11)
 
 # LIMIT TO JUST COD, HAKE, MONKFISH, HADDOCK, SWORDFISH, LING
 
@@ -466,6 +498,7 @@ case_study_plot <- landings_case_study_tonnes %>%
   select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, year, value, catch_by_vessel_CF, catch_by_EU_CF) %>% # For now remove vessel_CF, EU_CF, for cleaner output due to multiple CF values in Norway
   rename(landings = value) %>%
     pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
+  # Add asterisk to non-EU countries?
   mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
   mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel)) %>%
   unique() %>%
@@ -474,63 +507,79 @@ case_study_plot <- landings_case_study_tonnes %>%
   mutate(index_to_plot_all_values = as.character(row_number())) %>%
   ungroup()
 
-for (i in 1:length(unique(case_study_plot$x_labels))){
-  plot_i <- case_study_plot %>%
-    filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
-    filter(is.na(value)==FALSE) %>%
-    filter(nationality_of_vessel=="Norway*")
-  # To re-order groups:
-    #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
-  sciname_presentation <- unique(plot_i$x_labels)
-  common_name <- unique(plot_i$common_name)
-  long_title <- paste(common_name, sciname_presentation, sep = "\n")
-  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
-    geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
-    labs(title = long_title, x = "Nationality of vessel", y = "Tonnes", fill = "") +
-    #scale_color_manual(values = group.colors) + 
-    #scale_shape_manual(values = group.shapes) +
-    scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
-                        breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
-                        labels = c("landings", "catch by national CF", "catch by EU CF")) +
-    theme_classic() + 
-    theme(axis.text.x = element_text(size = 12),
-          axis.text.y = element_text(size = 12),
-          axis.title = element_text(size = 18),
-          plot.title = element_text(size = 18, hjust = 0),
-          legend.position = "bottom",
-          legend.box = "vertical",
-          legend.box.just = "left",
-          legend.title = element_text(size = 14),
-          legend.text = element_text(size = 12)) + 
-    coord_flip()
-  plot(p)
-  pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
-  ggsave(file = file.path(outdir, pngname))
-  #ggsave(file = file.path(outdir, "landings_vs_catch_case_study_4_Gadus morhua (Fresh, gutted and headed)-JustNorway.png"))
-}
-
-### CREATE MULTIPANEL PLOTS - CLUNKY: need to adjust for different figures
-
-# Choose x_labels_multipanel and run to plot function and then re-run with new x_labels_multipanel 
-# For Gadus morhua fresh, gutted, and headed, need to run once without Norway and once with JUST norway
-
-#x_labels_multipanel <- "Gadus morhua (Fresh, gutted and headed)"
-#x_labels_multipanel <- "Lophiidae (Fresh, gutted and headed)"
-x_labels_multipanel <- "Lophiidae (Frozen, gutted and headed)"
-
+# FIGURE 8 ONLY:
+# Turn on/off filtering Norway as desired:
+i = 10 # for Figure 8
 plot_i <- case_study_plot %>%
-  filter(x_labels == x_labels_multipanel) %>%
-  filter(is.na(value)==FALSE) #%>%
-  #filter(nationality_of_vessel=="Norway*") 
-  #filter(nationality_of_vessel %in% c("Norway*", "United Kingdom*")==FALSE)
+  filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
+  filter(is.na(value)==FALSE)
+#filter(nationality_of_vessel=="Norway*")
+#filter(nationality_of_vessel!="Norway*")
 # To re-order groups:
 #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
 sciname_presentation <- unique(plot_i$x_labels)
 common_name <- unique(plot_i$common_name)
 long_title <- paste(common_name, sciname_presentation, sep = "\n")
+p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = long_title, x = "", y = "Net or nominal weight in tonnes", fill = "") +
+  #scale_color_manual(values = group.colors) +
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) +
+  coord_flip()
+plot(p)
+#pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
+ggsave(file = file.path(outdir, "Figure-8.png"))
+#tiffname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".tiff", sep = "")
+ggsave(file = file.path(outdir, "Figure-8.tiff"))
 
 
-cod_no_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+
+
+### CREATE MULTIPANEL PLOTS - CLUNKY
+# FIGURE 6
+# Re-do case_study_plot - now without asterisk for non-EU countries (not needed in multipanel plots)
+case_study_plot <- landings_case_study_tonnes %>%
+  # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
+  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, year, value, catch_by_vessel_CF, catch_by_EU_CF) %>% # For now remove vessel_CF, EU_CF, for cleaner output due to multiple CF values in Norway
+  rename(landings = value) %>%
+  pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
+  # Add asterisk to non-EU countries?
+  # mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
+  mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel)) %>%
+  unique() %>%
+  arrange(x_labels, calculation) %>%
+  group_by(x_labels, nationality_of_vessel) %>%
+  mutate(index_to_plot_all_values = as.character(row_number())) %>%
+  ungroup()
+
+x_labels_multipanel <- "Gadus morhua (Fresh, gutted and headed)"
+
+
+
+sciname_presentation <- unique(plot_i$x_labels)
+common_name <- unique(plot_i$common_name)
+long_title <- paste(common_name, sciname_presentation, sep = "\n")
+
+# No Norway and no UK - no LEGEND
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel %in% c("Norway", "United Kingdom")==FALSE)
+
+cod_no_Norway_no_UK <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
   geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
   labs(title = long_title, x = "", y = "", fill = "") +
   #scale_color_manual(values = group.colors) + 
@@ -543,22 +592,25 @@ cod_no_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value,
         axis.text.y = element_text(size = 12),
         axis.title = element_text(size = 18),
         plot.title = element_text(size = 18, hjust = 0),
-        legend.position = "none",
-        legend.box = "vertical",
-        legend.box.just = "left",
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) + 
+        legend.position = "none") + 
   coord_flip()
+
+# Only Norway - only give Norway a legend since it will be at the bottom of the plot
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel=="Norway") 
+
 
 cod_only_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
   geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
-  labs(title = "", x = "", y = "Tonnes", fill = "") +
+  labs(title = "", x = "", y = "Net or nominal weight in tonnes", fill = "") +
   #scale_color_manual(values = group.colors) + 
   #scale_shape_manual(values = group.shapes) +
   scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
                     breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
                     labels = c("landings", "catch by national CF", "catch by EU CF")) +
-  annotate("text", y = c(158000, 161500, 183000), x = c(0.8, 1, 1.2), label = c("--- round cut", "--- right cut", "--- earbone off")) +
+  annotate("text", y = c(158000, 161500, 183000), x = c(0.83, 1.03, 1.20), size = 4, label = c("--- round cut", "--- right cut", "--- earbone off")) +
   ylim(c(0, 200000)) +
   theme_classic() + 
   theme(axis.text.x = element_text(size = 12),
@@ -571,7 +623,111 @@ cod_only_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = valu
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12)) + 
   coord_flip()
-  
+
+# Only UK
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel=="United Kingdom") 
+
+# Only UK - no legend
+cod_only_UK <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = "", x = "", y = "", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "none") + 
+  coord_flip()
+
+plot(cod_no_Norway_no_UK)
+plot(cod_only_Norway)
+plot(cod_only_UK)
+
+# Combine with cowplot::plot_grid
+plot_grid(cod_no_Norway_no_UK, cod_only_UK, cod_only_Norway,
+                   ncol = 1,
+                   rel_heights = c(1, 0.3, 0.5),
+                   align = "v")
+
+ggsave(file = file.path(outdir, "Figure-5.png"), width = 9, height = 11.5)
+ggsave(file = file.path(outdir, "Figure-5.tiff"), width = 9, height = 11.5)
+
+
+# FIGURE 11
+# Re-do case_study_plot - now with asterisk for non-EU countries
+case_study_plot <- landings_case_study_tonnes %>%
+  # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
+  select(x_labels, common_name, nationality_of_vessel, vessel_iso3c, vessel_iso2c, reporting_entity, year, value, catch_by_vessel_CF, catch_by_EU_CF) %>% # For now remove vessel_CF, EU_CF, for cleaner output due to multiple CF values in Norway
+  rename(landings = value) %>%
+  pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
+  # Add asterisk to non-EU countries?
+  mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
+  mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel)) %>%
+  unique() %>%
+  arrange(x_labels, calculation) %>%
+  group_by(x_labels, nationality_of_vessel) %>%
+  mutate(index_to_plot_all_values = as.character(row_number())) %>%
+  ungroup()
+
+# FRESH Lophiidae:
+x_labels_multipanel <- "Lophiidae (Fresh, gutted and headed)"
+
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) 
+
+sciname_presentation <- unique(plot_i$x_labels)
+common_name <- unique(plot_i$common_name)
+long_title <- paste(common_name, sciname_presentation, sep = "\n")
+
+monkfish_fresh <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = long_title, x = "", y = "Net or nominal weight in tonnes", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  coord_flip()
+
+plot(monkfish_fresh)
+#pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
+ggsave(file = file.path(outdir, "Figure-11_fresh-only.png"))
+#tiffname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".tiff", sep = "")
+ggsave(file = file.path(outdir, "Figure-11_fresh-only.tiff"))
+
+
+# Provide an additional Figure 11 that is a multipanel plot of both fresh and frozen Lophiidae:
+
+# First, redo monkfish fresh but with no legend
+x_labels_multipanel <- "Lophiidae (Fresh, gutted and headed)"
+
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) 
+
+sciname_presentation <- unique(plot_i$x_labels)
+common_name <- unique(plot_i$common_name)
+long_title <- paste(common_name, sciname_presentation, sep = "\n")
+
 monkfish_fresh <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
   geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
   labs(title = long_title, x = "", y = "", fill = "") +
@@ -592,9 +748,19 @@ monkfish_fresh <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value
         legend.text = element_text(size = 12)) + 
   coord_flip()
 
+
+# FROZEN Lophiidae
+x_labels_multipanel <- "Lophiidae (Frozen, gutted and headed)"
+
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) 
+
+sciname_presentation <- unique(plot_i$x_labels)
+
 monkfish_frozen <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
   geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
-  labs(title = "", x = "", y = "Tonnes", fill = "") +
+  labs(title = sciname_presentation, x = "", y = "Net or nominal weight in tonnes", fill = "") +
   #scale_color_manual(values = group.colors) + 
   #scale_shape_manual(values = group.shapes) +
   scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
@@ -612,90 +778,13 @@ monkfish_frozen <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = valu
         legend.text = element_text(size = 12)) + 
   coord_flip()
 
-
-plot(monkfish_fresh)
 plot(monkfish_frozen)
-plot(cod_no_Norway)
-plot(cod_only_Norway)
 
-gg1 <- ggplotGrob(cod_no_Norway)
-gg2 <- ggplotGrob(cod_only_Norway)
-gg_cod <- rbind(gg1, gg2)
-plot(gg_cod)
+# Combine with cowplot::plot_grid
+plot_grid(monkfish_fresh, monkfish_frozen,
+          ncol = 1,
+          rel_heights = c(1, 0.5),
+          align = "v")
 
-ggsave(file = file.path(outdir, "cod_snapshot_country_vs_EU_multipanel.png"), gg_cod, width = 9, height = 7)
-
-gg3 <- ggplotGrob(monkfish_fresh)
-gg4 <- ggplotGrob(monkfish_frozen)
-gg_monkfish <- rbind(gg3, gg4)
-plot(gg_monkfish)
-
-ggsave(file = file.path(outdir, "monkfish_snapshot_country_vs_EU_multipanel.png"), gg_monkfish, width = 9, height = 7)
-### NO LONGER DOING MONETARY VALUE ANALYSIS BELOW:
-
-############################################################################################################
-# Step 5: Same as Step 4, but plot monetary value: Use cf_case_data_3 (cf values that have both national and EU-wide values and with state+presentations that are also present in landings data)
-# FIX IT - FIX landings_prices: currently uses the most recent available prices (unit = Euro per tonne), which may or may not match to the year of landings data (unit = Tonnes product weight)
-# FIX IT - Calculations are not real; processing actually adds value to fish catch, so using the price per tonne of product weight to back-calculate the total value of whole, unprocessed catch is wrong
-# "PIVOT" landings Euro per tonne values into its own column
-landings_prices <- landings_cases %>%
-  filter(unit == "Euro per tonne" & use == "Total") %>%
-  group_by(x_labels, vessel_iso3c, vessel_iso2c) %>%
-  filter(year == max(year)) %>%
-  ungroup() %>%
-  select(x_labels, vessel_iso3c, vessel_iso2c, value) %>%
-  rename(Euro_per_tonne = value)
-
-# Plot landings data based on monetary value:
-landings_case_study_euros <- case_study_plot %>%
-  left_join(landings_prices, by = c("x_labels", "vessel_iso3c", "vessel_iso2c")) %>%
-  mutate(Euros = value * Euro_per_tonne)
-  
-
-for (i in 1:length(unique(landings_case_study_euros$x_labels))){
-  plot_i <- landings_case_study_euros %>%
-    filter(x_labels == unique(landings_case_study_euros$x_labels)[i]) #%>%
-  # To re-order groups:
-  #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
-  sciname_presentation <- unique(plot_i$x_labels)
-  common_name <- unique(plot_i$common_name)
-  long_title <- paste(common_name, sciname_presentation, sep = "\n")
-  p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = Euros, group = calculation)) +
-    geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
-    labs(title = long_title, x = "Nationality of vessel", y = "Euros", fill = "") +
-    #scale_color_manual(values = group.colors) + 
-    #scale_shape_manual(values = group.shapes) +
-    scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
-                      breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
-                      labels = c("Landings in Euros", "Catch in Euros by national CF", "Catch in Euros by EU CF")) +
-    theme_classic() + 
-    theme(axis.text.x = element_text(size = 12),
-          axis.text.y = element_text(size = 12),
-          axis.title = element_text(size = 18),
-          plot.title = element_text(size = 18, hjust = 0),
-          legend.position = "bottom",
-          legend.box = "vertical",
-          legend.box.just = "left",
-          legend.title = element_text(size = 14),
-          legend.text = element_text(size = 12)) + 
-    coord_flip()
-  plot(p)
-  pngname <- paste("landings_vs_catch_in_Euros_case_study_", i, "_", sciname_presentation, ".png", sep = "")
-  ggsave(file = file.path(outdir, pngname))
-}
-
-
-# Expand case studies to non-EU, non-European countries:
-#List of yellow/red card countries for which we also have CF values: 
-#Panama
-#Ecuador
-#Trinidad and Tobago
-#Liberia
-#South Korea
-
-# Only species to intersect between EU_cf values and Tim's CF data that come from yellow card countries: Solea solea
-
-
-
-# FIX IT: cross-check landings_dat (and final outputs) against country-specific queries in EUROSTAT website by country and species
-
+ggsave(file = file.path(outdir, "Figure-11_fresh-and-frozen.png"), width = 9, height = 11.5)
+ggsave(file = file.path(outdir, "Figure-11_fresh-and-frozen.tiff"), width = 9, height = 11.5)

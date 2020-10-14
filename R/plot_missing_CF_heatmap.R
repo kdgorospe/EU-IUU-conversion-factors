@@ -39,6 +39,8 @@ indir <- "/Volumes/jgephart/EU IUU/Inputs"
 #artis_outputs <- "K:/ARTIS/Outputs"
 # Output folder:
 #outdir <- "K:/EU IUU/Outputs"
+# Input folder:
+#indir <- "K:/EU IUU/Inputs"
 
 ############################################################################################################
 # Step 1: Get CF data and Landings data
@@ -210,7 +212,7 @@ p_heat_map <- ggplot(data = top_50_heat_map, aes(x = scientific_name, y = presen
   heat_map_theme
 
 print(p_heat_map)
-ggsave(file = file.path(outdir, "CF_national_values_heat_map.png"), height = 6, width = 8.5)
+#ggsave(file = file.path(outdir, "CF_national_values_heat_map.png"), height = 6, width = 8.5)
 
 
 ############################################################################################################
@@ -280,7 +282,7 @@ p_yes_no <- ggplot(data = top_50_EU_yes_no, aes(x = scientific_name, y = present
   
 
 print(p_yes_no)
-ggsave(file = file.path(outdir, "CF_EU_values_heat_map_yes_no.png"), width = 8.5, height = 6)
+#ggsave(file = file.path(outdir, "CF_EU_values_heat_map_yes_no.png"), width = 8.5, height = 6)
 
 ############################################################################################################
 ### REDO PLOTS FOR MULTIPANEL: remove axis labels, add title "A" and "B"
@@ -308,7 +310,8 @@ gg2 <- ggplotGrob(p_yes_no)
 g_heat_maps <- rbind(gg1, gg2)
 plot(g_heat_maps)
 
-ggsave(file = file.path(outdir, "heat_maps_multipanel.png"), g_heat_maps, device = "png", width = 8.5, height = 11)
+ggsave(file = file.path(outdir, "Figure-4.png"), g_heat_maps, device = "png", width = 8.5, height = 11)
+ggsave(file = file.path(outdir, "Figure-4.tiff"), g_heat_maps, device = "tiff", width = 8.5, height = 11)
 
 
 ############################################################################################################
