@@ -22,8 +22,17 @@ outdir <- "/Volumes/jgephart/EU IUU/Outputs"
 # Input folder:
 indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
+# Windows:
+# Data folders
+#datadir <- "K:/ARTIS/Data"
+#trade_datadir <- "Data/Trade Data"
+# Output folder:
+#outdir <- "K:/EU IUU/Outputs"
+# Input folder:
+#indir <- "K:/EU IUU/Inputs"
+
 # Read in all CF and trade data:
-hs_taxa_cf_match <- read.csv(file.path(trade_datadir, "2020-09-10_hs-taxa-CF_strict-match.csv"))
+hs_taxa_cf_match <- read.csv(file.path(indir, "2020-09-10_hs-taxa-CF_strict-match.csv"))
 trade_data <- read.csv(file.path(trade_datadir, "2018_korea_exports_030354.csv"))
 eumofa_data <- read.csv(file.path(datadir, "EUMOFA_compiled.csv"), stringsAsFactors = FALSE)
 source("R/combine_CF_datasets.R")
@@ -83,7 +92,7 @@ plot_dat <- data.frame(product_q = product_q, cf_korea = cf_korea, max_cf_by_cod
          q_by_min = product_q * min_cf_by_code,
          q_by_eumofa = product_q * cf_eumofa) %>% 
   pivot_longer(cols = contains("q"), names_to = "calculation") %>%
-  mutate(group = if_else(str_detect(calculation, "product"), true = "product form", false = "live weight"))
+  mutate(group = if_else(str_detect(calculation, "product"), true = "product form", false = "nominal weight"))
 
 p <- ggplot(plot_dat, aes(x = calculation, y = value, fill = group)) +
   geom_bar(stat = "identity") +
@@ -101,4 +110,5 @@ p <- ggplot(plot_dat, aes(x = calculation, y = value, fill = group)) +
         legend.text = element_text(size = 14)) 
 
 plot(p)
-ggsave(file = file.path(outdir, "trade_case_study.png"), width = 11.5, height = 8)  
+ggsave(file = file.path(outdir, "Figure-14.png"), width = 11.5, height = 8)  
+ggsave(file = file.path(outdir, "Figure-14.tiff"), width = 11.5, height = 8)  

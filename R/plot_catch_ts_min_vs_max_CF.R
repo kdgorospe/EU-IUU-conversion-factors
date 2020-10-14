@@ -34,9 +34,10 @@ indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
 # Windows:
 #datadir <- "K:/ARTIS/Data"
-#artis_outputs <- "K:/ARTIS/Outputs"
 # Output folder:
 #outdir <- "K:/EU IUU/Outputs"
+# Input folder:
+#indir <- "K:/EU IUU/Inputs"
 
 ############################################################################################################
 # Step 1: Get CF data and Landings data
@@ -173,7 +174,10 @@ for (i in 1:length(species_list)){
     geom_line(data = landings_no_cf, aes(x = year, y = year_landings_no_cf, linetype = "dashed")) +
     geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_min, linetype = "solid")) +
     geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_max, linetype = "solid")) +
-    scale_linetype_manual(name = "total", values = c("dashed", "solid"), labels = c("landings with no CF value", "catch by minimum and maximum CF value")) +
+    scale_color_hue(name = "net weight by presentation") +
+    scale_linetype_manual(name = "total", values = c("dashed", "solid"), labels = c("net weight for presentations with no CF value", "nominal weight by min and max CF value")) +
+    #scale_color_viridis_d(name = "net weight by presentation") +
+    #scale_color_brewer(palette = "Spectral", name = "net weight by presentation") +
     ylab("tonnes") +
     theme_classic() + 
     theme(axis.text.x = element_text(size = 12),
@@ -190,6 +194,9 @@ for (i in 1:length(species_list)){
   plot(p)
   pngname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_list[i], pattern = " ", replacement = "-"), ".png", sep = "")
   ggsave(file = file.path(outdir, pngname), width = 11.5, height = 8)  
+  
+  tiffname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_list[i], pattern = " ", replacement = "-"), ".tiff", sep = "")
+  ggsave(file = file.path(outdir, tiffname), width = 11.5, height = 8)  
   
 }
 

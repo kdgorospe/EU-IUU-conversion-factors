@@ -102,9 +102,34 @@ cf_case_data_4 <- cf_data_full %>%
          max_cf_relative = round(max_cf_relative, digits = 2)) %>%
   ungroup()
 
-
 # Provide raw data for EU IUU Coalition
 write.csv(cf_case_data_4 %>% mutate_all(~str_remove_all(., pattern = ",")) %>% select(-c(n_CF, note, match_combo, x_labels, min_in_group, max_cf_relative)), file = file.path(outdir, "case_studies_cf_values_with_eu_annex_values_raw_data_FULL.csv"), quote = FALSE, row.names = FALSE)
+
+
+# Summarize CF values for all presentations (REGARDLESS OF SPECIES)
+cf_no_species <- cf_data_full %>%
+  mutate(match_combo = paste(state, presentation, scientific_name, sep = ", ")) %>%
+  filter(match_combo %in% cf_data_eu_annex_all$match_combo) %>%
+  # Calculate relative values for a separate plot
+  group_by(landings_code) %>%
+  mutate(min_in_group = min(conversion_factor),
+         max_in_group = max(conversion_factor),
+         range_in_group = max(conversion_factor)-min(conversion_factor)) %>%
+  ungroup() %>%
+  mutate(cf_relative = conversion_factor / min_in_group) %>%
+  group_by(landings_code) %>%
+  mutate(max_cf_relative = max(cf_relative),
+         max_cf_relative = round(max_cf_relative, digits = 2)) %>%
+  ungroup() %>%
+  select(landings_code, min_in_group, max_in_group, range_in_group, max_cf_relative) %>%
+  unique() %>%
+  arrange(desc(range_in_group))
+
+# Output cf summary (regardless of species)
+write.csv(cf_no_species %>% mutate_all(~str_remove_all(., pattern = ",")), file = file.path(outdir, "summary-of-cf-values-no-species-info.csv"), quote = FALSE, row.names = FALSE)
+
+
+
 
 
 ############################################################################################################
