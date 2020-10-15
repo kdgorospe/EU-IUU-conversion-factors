@@ -808,7 +808,7 @@ plot(monkfish_frozen)
 # Combine with cowplot::plot_grid
 plot_grid(monkfish_fresh, monkfish_frozen,
           ncol = 1,
-          rel_heights = c(1, 0.5),
+          rel_heights = c(1, 0.6),
           align = "v")
 
 ggsave(file = file.path(outdir, "Figure-11_fresh-and-frozen.png"), width = 9, height = 11.5)

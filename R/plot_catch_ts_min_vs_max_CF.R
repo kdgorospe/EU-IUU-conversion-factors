@@ -174,7 +174,7 @@ for (i in 1:length(species_list)){
     geom_line(data = landings_no_cf, aes(x = year, y = year_landings_no_cf, linetype = "dashed")) +
     geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_min, linetype = "solid")) +
     geom_line(data = landings_sum_pres, aes(x = year, y = year_total_catch_max, linetype = "solid")) +
-    scale_color_hue(name = "net weight by presentation") +
+    scale_color_hue(name = "net weight\nby presentation") +
     scale_linetype_manual(name = "total", values = c("dashed", "solid"), labels = c("net weight for presentations with no CF value", "nominal weight by min and max CF value")) +
     #scale_color_viridis_d(name = "net weight by presentation") +
     #scale_color_brewer(palette = "Spectral", name = "net weight by presentation") +
