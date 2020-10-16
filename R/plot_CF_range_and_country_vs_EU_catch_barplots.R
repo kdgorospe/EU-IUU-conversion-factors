@@ -574,7 +574,7 @@ ggsave(file = file.path(outdir, "Figure-8.tiff"))
 
 
 ### CREATE MULTIPANEL PLOTS - CLUNKY
-# FIGURE 6
+# FIGURE 5
 # Re-do case_study_plot - now without asterisk for non-EU countries (not needed in multipanel plots)
 case_study_plot <- landings_case_study_tonnes %>%
   # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
@@ -649,7 +649,7 @@ cod_only_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = valu
         legend.text = element_text(size = 12)) + 
   coord_flip()
 
-# Only UK
+# Only UK - no legend
 plot_i <- case_study_plot %>%
   filter(x_labels == x_labels_multipanel) %>%
   filter(is.na(value)==FALSE) %>%
@@ -672,11 +672,11 @@ cod_only_UK <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, g
         legend.position = "none") + 
   coord_flip()
 
-plot(cod_no_Norway_no_UK)
-plot(cod_only_Norway)
-plot(cod_only_UK)
+plot(cod_no_Norway_no_UK) # no legend
+plot(cod_only_Norway) # with legend
+plot(cod_only_UK) # no legend
 
-# Combine with cowplot::plot_grid
+# Combine ALL THREE with cowplot::plot_grid
 plot_grid(cod_no_Norway_no_UK, cod_only_UK, cod_only_Norway,
                    ncol = 1,
                    rel_heights = c(1, 0.3, 0.5),
@@ -684,6 +684,77 @@ plot_grid(cod_no_Norway_no_UK, cod_only_UK, cod_only_Norway,
 
 ggsave(file = file.path(outdir, "Figure-5.png"), width = 9, height = 11.5)
 ggsave(file = file.path(outdir, "Figure-5.tiff"), width = 9, height = 11.5)
+
+# Combine non-EU (UK + Norway) as one plot and EU as separate plot
+
+# First need to create cod_no_Norway_no_UK WITH legend and cod_only_UK_with_title
+
+# No Norway and no UK - no LEGEND
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel %in% c("Norway", "United Kingdom")==FALSE)
+
+cod_no_Norway_no_UK_with_legend <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = long_title, x = "", y = "", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  coord_flip()
+
+plot(cod_no_Norway_no_UK_with_legend)
+
+# Save separately:
+ggsave(file = file.path(outdir, "Box-1.png"), width = 9, height = 11.5)
+ggsave(file = file.path(outdir, "Box-1.tiff"), width = 9, height = 11.5)
+
+# Only UK - no legend
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel=="United Kingdom") 
+
+# Only UK - no legend
+cod_only_UK_with_title <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = long_title, x = "", y = "", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "none") + 
+  coord_flip()
+
+plot(cod_only_UK_with_title)
+
+# NOW COMBINE:
+# Combine ALL THREE with cowplot::plot_grid
+plot_grid(cod_only_UK_with_title, cod_only_Norway,
+          ncol = 1,
+          rel_heights = c(0.7, 1),
+          align = "v")
+
+ggsave(file = file.path(outdir, "Box-2.png"), width = 9, height = 5.5)
+ggsave(file = file.path(outdir, "Box-2.tiff"), width = 9, height = 5.5)
 
 
 # FIGURE 11
