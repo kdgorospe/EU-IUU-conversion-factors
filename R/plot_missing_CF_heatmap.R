@@ -310,8 +310,9 @@ gg2 <- ggplotGrob(p_yes_no)
 g_heat_maps <- rbind(gg1, gg2)
 plot(g_heat_maps)
 
-ggsave(file = file.path(outdir, "Figure-4.png"), g_heat_maps, device = "png", width = 8.5, height = 11)
-ggsave(file = file.path(outdir, "Figure-4.tiff"), g_heat_maps, device = "tiff", width = 8.5, height = 11)
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Final-Report_Figure-3.png"), g_heat_maps, device = "png", width = 8.5, height = 11)
+ggsave(file = file.path(outdir, "Final-Report_Figure-3.tiff"), g_heat_maps, device = "tiff", width = 8.5, height = 11)
 
 
 ############################################################################################################

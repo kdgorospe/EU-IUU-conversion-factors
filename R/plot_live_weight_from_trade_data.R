@@ -110,5 +110,6 @@ p <- ggplot(plot_dat, aes(x = calculation, y = value, fill = group)) +
         legend.text = element_text(size = 14)) 
 
 plot(p)
-ggsave(file = file.path(outdir, "Figure-14.png"), width = 11.5, height = 8)  
-ggsave(file = file.path(outdir, "Figure-14.tiff"), width = 11.5, height = 8)  
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Final-Report_Figure-13.png"), width = 11.5, height = 8)  
+ggsave(file = file.path(outdir, "Final-Report_Figure-13.tiff"), width = 11.5, height = 8)  

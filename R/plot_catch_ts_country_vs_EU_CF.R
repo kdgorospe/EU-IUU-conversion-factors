@@ -565,8 +565,9 @@ g4 <- ggplotGrob(p_norway_cod)
 g_cod <- rbind(g3, g4)
 plot(g_cod)
 
-ggsave(file = file.path(outdir, "Figure-6.png"), g_cod, device = "png", width = 9, height = 7)
-ggsave(file = file.path(outdir, "Figure-6.tiff"), g_cod, device = "tiff", width = 9, height = 7)
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Final-Report_Figure-5.png"), g_cod, device = "png", width = 9, height = 7)
+ggsave(file = file.path(outdir, "Final-Report_Figure-5.tiff"), g_cod, device = "tiff", width = 9, height = 7)
 
 
 
@@ -847,7 +848,8 @@ g2 <- ggplotGrob(p_norway_hake)
 g_hake <- rbind(g1, g2)
 plot(g_hake)
 
-ggsave(file = file.path(outdir, "Figure-9.png"), g_hake, device = "png", width = 9, height = 7)
-ggsave(file = file.path(outdir, "Figure-9.tiff"), g_hake, device = "tiff", width = 9, height = 7)
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Final-Report_Figure-8.png"), g_hake, device = "png", width = 9, height = 7)
+ggsave(file = file.path(outdir, "Final-Report_Figure-8.tiff"), g_hake, device = "tiff", width = 9, height = 7)
 
 

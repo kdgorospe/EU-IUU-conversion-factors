@@ -190,11 +190,10 @@ for (i in 1:length(species_list)){
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 10)) 
   
-  
+  # FINAL FIGURE - loops through Final Report Figures 6, 9, and 11
   plot(p)
   pngname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_list[i], pattern = " ", replacement = "-"), ".png", sep = "")
   ggsave(file = file.path(outdir, pngname), width = 11.5, height = 8)  
-  
   tiffname <- paste("landings-vs-catch_min-vs-max-CF_", str_replace(species_list[i], pattern = " ", replacement = "-"), ".tiff", sep = "")
   ggsave(file = file.path(outdir, tiffname), width = 11.5, height = 8)  
   

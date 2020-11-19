@@ -177,9 +177,10 @@ p <- ggplot(data = cf_case_data_4 %>%
 
 print(p)
 
+# FINAL FIGURE
 # Standard letter size paper:
-ggsave(file.path(outdir, "Figure-2_with-relative_values.tiff"), width = 8.5, height = 11)
-ggsave(file.path(outdir, "Figure-2_with-relative_values.png"), width = 8.5, height = 11)
+ggsave(file.path(outdir, "Full-Report_Figure-2.tiff"), width = 8.5, height = 11)
+ggsave(file.path(outdir, "Full-Report_Figure-2.png"), width = 8.5, height = 11)
 
 # LIMIT TO JUST COD, HAKE, MONKFISH, HADDOCK, SWORDFISH, LING
 
@@ -278,8 +279,9 @@ legend <- get_legend(
 
 plot_grid(all_p, legend, ncol = 1, rel_heights = c(1, .1))
 
-ggsave(file.path(outdir, paste("absolute-cf_all-case-species.png", sep = "")), width = 8.5, height = 10)
-ggsave(file.path(outdir, paste("absolute-cf_all-case-species.tiff", sep = "")), width = 8.5, height = 10)
+# FINAL FIGURE
+ggsave(file.path(outdir, paste("Fact-Sheet_Figure-4.png", sep = "")), width = 8.5, height = 10)
+ggsave(file.path(outdir, paste("Fact-Sheet_Figure-4.tiff", sep = "")), width = 8.5, height = 10)
 
 ############################################################################################################
 # Step 6A: Now make CF values relative to the minimum value
@@ -313,8 +315,9 @@ p <- ggplot(data = cf_case_data_4 %>%
   coord_flip() 
 
 print(p)
-ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full_reordered_top50.png"), width = 8.5, height = 11)
-ggsave(file.path(outdir, "case_studies_cf_RELATIVE_values_with_eu_annex_values_full_reordered_top50.tiff"), width = 8.5, height = 11)
+# FINAL FIGURE
+ggsave(file.path(outdir, "Full-Report_SI_Figure-1.png"), width = 8.5, height = 11)
+ggsave(file.path(outdir, "Full-Report_SI_Figure-1.tiff"), width = 8.5, height = 11)
 
 
 # DO RELATIVE CF VALUE PLOTS FOR JUST COD, HAKE, MONKFISH, HADDOCK, SWORDFISH, LING
@@ -532,7 +535,6 @@ case_study_plot <- landings_case_study_tonnes %>%
   mutate(index_to_plot_all_values = as.character(row_number())) %>%
   ungroup()
 
-# FIGURE 8 ONLY:
 # Turn on/off filtering Norway as desired:
 i = 10 # for Figure 8
 plot_i <- case_study_plot %>%
@@ -565,16 +567,17 @@ p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = ind
         legend.text = element_text(size = 12)) +
   coord_flip()
 plot(p)
+
+# FINAL FIGURE
 #pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
-ggsave(file = file.path(outdir, "Figure-8.png"))
+ggsave(file = file.path(outdir, "Final-Report_Figure-7.png"))
 #tiffname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".tiff", sep = "")
-ggsave(file = file.path(outdir, "Figure-8.tiff"))
+ggsave(file = file.path(outdir, "Fiinal-Report_Figure-7.tiff"))
 
 
 
 
 ### CREATE MULTIPANEL PLOTS - CLUNKY
-# FIGURE 5
 # Re-do case_study_plot - now without asterisk for non-EU countries (not needed in multipanel plots)
 case_study_plot <- landings_case_study_tonnes %>%
   # NOTE: After calculating catch_by_port, it turns out there are no discrepancies between catch_by_port_CF vs catch_by_vessel_CF so just remove catch by port
@@ -591,8 +594,6 @@ case_study_plot <- landings_case_study_tonnes %>%
   ungroup()
 
 x_labels_multipanel <- "Gadus morhua (Fresh, gutted and headed)"
-
-
 
 sciname_presentation <- unique(plot_i$x_labels)
 common_name <- unique(plot_i$common_name)
@@ -682,8 +683,9 @@ plot_grid(cod_no_Norway_no_UK, cod_only_UK, cod_only_Norway,
                    rel_heights = c(1, 0.3, 0.5),
                    align = "v")
 
-ggsave(file = file.path(outdir, "Figure-5.png"), width = 9, height = 11.5)
-ggsave(file = file.path(outdir, "Figure-5.tiff"), width = 9, height = 11.5)
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Final-Report_Figure-4.png"), width = 9, height = 11.5)
+ggsave(file = file.path(outdir, "Final-Report_Figure-4.tiff"), width = 9, height = 11.5)
 
 # Combine non-EU (UK + Norway) as one plot and EU as separate plot
 
@@ -717,9 +719,9 @@ cod_no_Norway_no_UK_with_legend <- ggplot(data = plot_i, aes(x = nationality_of_
 
 plot(cod_no_Norway_no_UK_with_legend)
 
-# Save separately:
-ggsave(file = file.path(outdir, "Box-1.png"), width = 9, height = 11.5)
-ggsave(file = file.path(outdir, "Box-1.tiff"), width = 9, height = 11.5)
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Fact-Sheet_Figure-2.png"), width = 9, height = 11.5)
+ggsave(file = file.path(outdir, "Fact-Sheet_Figure-2.tiff"), width = 9, height = 11.5)
 
 # Only UK - no legend
 plot_i <- case_study_plot %>%
@@ -747,14 +749,15 @@ cod_only_UK_with_title <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y
 plot(cod_only_UK_with_title)
 
 # NOW COMBINE:
-# Combine ALL THREE with cowplot::plot_grid
+# Combine with cowplot::plot_grid
 plot_grid(cod_only_UK_with_title, cod_only_Norway,
           ncol = 1,
           rel_heights = c(0.7, 1),
           align = "v")
 
-ggsave(file = file.path(outdir, "Box-2.png"), width = 9, height = 5.5)
-ggsave(file = file.path(outdir, "Box-2.tiff"), width = 9, height = 5.5)
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Fact-Sheet_Fig-3.png"), width = 9, height = 5.5)
+ggsave(file = file.path(outdir, "Fact-Sheet_Fig-3.tiff"), width = 9, height = 5.5)
 
 
 # FIGURE 11
@@ -882,5 +885,6 @@ plot_grid(monkfish_fresh, monkfish_frozen,
           rel_heights = c(1, 0.6),
           align = "v")
 
-ggsave(file = file.path(outdir, "Figure-11_fresh-and-frozen.png"), width = 9, height = 11.5)
-ggsave(file = file.path(outdir, "Figure-11_fresh-and-frozen.tiff"), width = 9, height = 11.5)
+# FINAL FIGURE
+ggsave(file = file.path(outdir, "Final-Report_Figure-10.png"), width = 9, height = 11.5)
+ggsave(file = file.path(outdir, "Final-Report_Figure-10.tiff"), width = 9, height = 11.5)
