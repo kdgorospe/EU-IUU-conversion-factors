@@ -26,11 +26,9 @@ library(data.table) # rbindlist
 
 # MacOS:
 # Data folders:
-datadir <- "/Volumes/jgephart/ARTIS/Data"
+datadir <- "Data/CF Datasets"
 # Output folder:
 outdir <- "/Volumes/jgephart/EU IUU/Outputs"
-# Input folder:
-indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
 # Windows:
 #datadir <- "K:/ARTIS/Data"
@@ -41,9 +39,16 @@ indir <- "/Volumes/jgephart/EU IUU/Inputs"
 
 ############################################################################################################
 # Step 1: Get CF data and Landings data
-source("R/combine_CF_datasets.R")
-cf_data_full <- combine_CF_datasets()
+# Step 1: Get CF data and Landings data
+# FROM ARTIS:
+# Input folder:
+# indir <- "/Volumes/jgephart/EU IUU/Inputs"
+#source("R/combine_CF_datasets.R")
+#cf_data_full <- combine_CF_datasets()
 # Ignore warning message about EU; iso3c and iso2c is set to "EU" manually within the function
+
+# For Pew Review:
+cf_data_full <- read.csv(file.path(datadir, "cf_data_full.csv"))
 
 # FIX IT - for now, limiting to CF values from EU Council Regulations Annex:
 cf_data_full <- cf_data_full %>%

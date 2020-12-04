@@ -15,9 +15,9 @@ library(countrycode)
 library(data.table) # rbindlist
 
 # MacOS:
-datadir <- "/Volumes/jgephart/ARTIS/Data"
+datadir <- "Data/CF Datasets"
 outdir <- "/Volumes/jgephart/EU IUU/Outputs"
-indir <- "/Volumes/jgephart/EU IUU/Inputs"
+
 
 # Windows:
 # datadir <- "K:/ARTIS/Data"
@@ -28,7 +28,14 @@ indir <- "/Volumes/jgephart/EU IUU/Inputs"
 # Recode states and presentations 
 source("R/combine_CF_datasets.R")
 
-cf_data_full <- combine_CF_datasets() %>%
+# From ARTIS:
+# indir <- "/Volumes/jgephart/EU IUU/Inputs"
+#source("R/combine_CF_datasets.R")
+#cf_data_full <- combine_CF_datasets()
+# Ignore warning message about EU; iso3c and iso2c is set to "EU" manually within the function
+
+# For Pew Review:
+cf_data_full <- read.csv(file.path(datadir, "cf_data_full.csv")) %>%
   mutate(reference = case_when(str_detect(reference, "EU Council Regulations") ~ "EU Council",
                                str_detect(reference, "FAO") ~ "FAO",
                                str_detect(reference, "Third Country") ~ "National Fisheries Authority",
