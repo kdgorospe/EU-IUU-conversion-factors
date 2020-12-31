@@ -446,7 +446,7 @@ iso2_landings <- iso2_landings[!grepl("main", iso2_landings)]
 landings_dat_list <- lapply(iso2_landings, function(i){clean_landings(eu_country = i)})
 names(landings_dat_list) <- iso2_landings
 
-# FIX IT: check "ee", "lt", "pl" why does they have print different console outputs during "lapply" - e.g., "`2018` = col_character() 
+# FIX IT: check "ee", "lt", "pl" why do they print different console outputs during "lapply" - e.g., "`2018` = col_character() 
 
 # "PIVOT" EU CF values into its own column
 eu_wide_cf <- cf_case_data_3 %>%
@@ -542,21 +542,48 @@ case_study_plot <- landings_case_study_tonnes %>%
   mutate(index_to_plot_all_values = as.character(row_number())) %>%
   ungroup()
 
-# Turn on/off filtering Norway as desired:
+# Adjust filtering by nationality_of_vessel to create separate plots based on scale
 i = 10 # for Figure 8
 plot_i <- case_study_plot %>%
   filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
-  filter(is.na(value)==FALSE)
-#filter(nationality_of_vessel=="Norway*")
-#filter(nationality_of_vessel!="Norway*")
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel %in% c("Netherlands"))
+
 # To re-order groups:
 #mutate(calculation = fct_relevel(calculation, "landings", "catch_by_national_CF", "catch_by_EU_CF"))
 sciname_presentation <- unique(plot_i$x_labels)
 common_name <- unique(plot_i$common_name)
 long_title <- paste(common_name, sciname_presentation, sep = "\n")
-p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+p_small <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
   geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
-  labs(title = long_title, x = "", y = "Net or nominal weight in tonnes", fill = "") +
+  labs(title = long_title, x = "", y = "", fill = "") +
+  #scale_color_manual(values = group.colors) +
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "none",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) +
+  coord_flip()
+
+plot(p_small)
+
+plot_i <- case_study_plot %>%
+  filter(x_labels == unique(case_study_plot$x_labels)[i]) %>%
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel %in% c("Netherlands")==FALSE)
+
+p_big <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = "", x = "", y = "Net or nominal weight in tonnes", fill = "") +
   #scale_color_manual(values = group.colors) +
   #scale_shape_manual(values = group.shapes) +
   scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
@@ -573,7 +600,15 @@ p <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = ind
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12)) +
   coord_flip()
-plot(p)
+
+plot(p_big)
+
+# Combine ALL THREE with cowplot::plot_grid
+plot_grid(p_small, p_big,
+          ncol = 1,
+          rel_heights = c(0.3, 1),
+          align = "v")
+
 
 # FINAL FIGURE
 #pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
@@ -592,7 +627,7 @@ case_study_plot <- landings_case_study_tonnes %>%
   rename(landings = value) %>%
   pivot_longer(cols = landings:catch_by_EU_CF, names_to = "calculation") %>%
   # Add asterisk to non-EU countries?
-  # mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
+  mutate(nationality_of_vessel = if_else(vessel_iso3c %in% eu_codes==FALSE, true = paste(nationality_of_vessel, "*", sep = ""), false = nationality_of_vessel)) %>%
   mutate(nationality_of_vessel = if_else(nationality_of_vessel == "Germany (until 1990 former territory of the FRG)", true = "Germany", false = nationality_of_vessel)) %>%
   unique() %>%
   arrange(x_labels, calculation) %>%
@@ -610,7 +645,7 @@ long_title <- paste(common_name, sciname_presentation, sep = "\n")
 plot_i <- case_study_plot %>%
   filter(x_labels == x_labels_multipanel) %>%
   filter(is.na(value)==FALSE) %>%
-  filter(nationality_of_vessel %in% c("Norway", "United Kingdom")==FALSE)
+  filter(nationality_of_vessel %in% c("Norway*", "United Kingdom*")==FALSE)
 
 cod_no_Norway_no_UK <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
   geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
@@ -632,7 +667,7 @@ cod_no_Norway_no_UK <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = 
 plot_i <- case_study_plot %>%
   filter(x_labels == x_labels_multipanel) %>%
   filter(is.na(value)==FALSE) %>%
-  filter(nationality_of_vessel=="Norway") 
+  filter(nationality_of_vessel=="Norway*") 
 
 
 cod_only_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
@@ -661,7 +696,7 @@ cod_only_Norway <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = valu
 plot_i <- case_study_plot %>%
   filter(x_labels == x_labels_multipanel) %>%
   filter(is.na(value)==FALSE) %>%
-  filter(nationality_of_vessel=="United Kingdom") 
+  filter(nationality_of_vessel=="United Kingdom*") 
 
 # Only UK - no legend
 cod_only_UK <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
@@ -783,58 +818,23 @@ case_study_plot <- landings_case_study_tonnes %>%
   mutate(index_to_plot_all_values = as.character(row_number())) %>%
   ungroup()
 
+# Provide a Figure 11 that is a multipanel plot of both fresh and frozen Lophiidae:
+
+
 # FRESH Lophiidae:
 x_labels_multipanel <- "Lophiidae (Fresh, gutted and headed)"
 
 plot_i <- case_study_plot %>%
   filter(x_labels == x_labels_multipanel) %>%
-  filter(is.na(value)==FALSE) 
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel %in% c("Norway*", "Ireland", "Germany")) 
+
 
 sciname_presentation <- unique(plot_i$x_labels)
 common_name <- unique(plot_i$common_name)
 long_title <- paste(common_name, sciname_presentation, sep = "\n")
 
-monkfish_fresh <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
-  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
-  labs(title = long_title, x = "", y = "Net or nominal weight in tonnes", fill = "") +
-  #scale_color_manual(values = group.colors) + 
-  #scale_shape_manual(values = group.shapes) +
-  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
-                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
-                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
-  theme_classic() + 
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_text(size = 18),
-        plot.title = element_text(size = 18, hjust = 0),
-        legend.position = "bottom",
-        legend.box = "vertical",
-        legend.box.just = "left",
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) + 
-  coord_flip()
-
-plot(monkfish_fresh)
-#pngname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".png", sep = "")
-ggsave(file = file.path(outdir, "Figure-11_fresh-only.png"))
-#tiffname <- paste("landings_vs_catch_case_study_", i, "_", sciname_presentation, ".tiff", sep = "")
-ggsave(file = file.path(outdir, "Figure-11_fresh-only.tiff"))
-
-
-# Provide an additional Figure 11 that is a multipanel plot of both fresh and frozen Lophiidae:
-
-# First, redo monkfish fresh but with no legend
-x_labels_multipanel <- "Lophiidae (Fresh, gutted and headed)"
-
-plot_i <- case_study_plot %>%
-  filter(x_labels == x_labels_multipanel) %>%
-  filter(is.na(value)==FALSE) 
-
-sciname_presentation <- unique(plot_i$x_labels)
-common_name <- unique(plot_i$common_name)
-long_title <- paste(common_name, sciname_presentation, sep = "\n")
-
-monkfish_fresh <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+monkfish_fresh_small <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
   geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
   labs(title = long_title, x = "", y = "", fill = "") +
   #scale_color_manual(values = group.colors) + 
@@ -853,6 +853,35 @@ monkfish_fresh <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12)) + 
   coord_flip()
+
+plot(monkfish_fresh_small)
+
+plot_i <- case_study_plot %>%
+  filter(x_labels == x_labels_multipanel) %>%
+  filter(is.na(value)==FALSE) %>%
+  filter(nationality_of_vessel %in% c("United Kingdom*", "Sweden", "Belgium")) 
+
+monkfish_fresh_big <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = value, group = index_to_plot_all_values)) +
+  geom_bar(position = "dodge", stat = "identity", aes(fill = calculation)) +
+  labs(title = sciname_presentation, x = "", y = "", fill = "") +
+  #scale_color_manual(values = group.colors) + 
+  #scale_shape_manual(values = group.shapes) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"),
+                    breaks = c("landings", "catch_by_vessel_CF", "catch_by_EU_CF"),
+                    labels = c("landings", "catch by national CF", "catch by EU CF")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title = element_text(size = 18),
+        plot.title = element_text(size = 18, hjust = 0),
+        legend.position = "none",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  coord_flip()
+
+plot(monkfish_fresh_big)
 
 
 # FROZEN Lophiidae
@@ -887,9 +916,9 @@ monkfish_frozen <- ggplot(data = plot_i, aes(x = nationality_of_vessel, y = valu
 plot(monkfish_frozen)
 
 # Combine with cowplot::plot_grid
-plot_grid(monkfish_fresh, monkfish_frozen,
+plot_grid(monkfish_fresh_small, monkfish_fresh_big, monkfish_frozen,
           ncol = 1,
-          rel_heights = c(1, 0.6),
+          rel_heights = c(1, 1, 1),
           align = "v")
 
 # FINAL FIGURE

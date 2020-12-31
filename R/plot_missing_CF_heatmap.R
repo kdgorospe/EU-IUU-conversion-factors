@@ -234,8 +234,8 @@ CF_EU_yes_no <- cf_data_full %>%
   unique() %>%
   group_by(scientific_name, landings_code) %>%
   summarise(list_of_iso3c_CF = paste(iso3c, sep = ", ", collapse = ", "),
-            EU_CF = case_when(n()>0 ~ "yes",
-                              n()==0 ~ "no",
+            EU_CF = case_when(n()>0 ~ "EU-wide CF value available",
+                              n()==0 ~ "not available",
                               TRUE ~ "error")) %>%
   ungroup() # should all be yes
 
@@ -243,11 +243,12 @@ CF_EU_yes_no <- cf_data_full %>%
 EU_yes_no_dat <- landings_availability %>%
   left_join(CF_EU_yes_no, by = c("scientific_name", "presentation" = "landings_code")) %>%
   # HERE NA's in n_CF are actually zeros - i.e., there are countries that catch this species + presentation but no countries have a CF value
-  mutate(EU_CF = replace_na(EU_CF, "no")) 
+  mutate(EU_CF = replace_na(EU_CF, "not available")) 
 
 EU_yes_no_grid <- expand.grid(scientific_name = unique(EU_yes_no_dat$scientific_name), presentation = unique(EU_yes_no_dat$presentation)) %>%
   left_join(EU_yes_no_dat, by = c("scientific_name", "presentation")) %>%
-  arrange(scientific_name, presentation)
+  arrange(scientific_name, presentation) %>%
+  mutate(EU_CF = replace_na(EU_CF, "not landed"))
 # NOTE: here NAs mean no one is actually landing that particular species+presentation combo
 
 # CHECK THAT ALL SPECIES ARE CAUGHT
@@ -278,7 +279,7 @@ top_50_EU_yes_no <- EU_yes_no_grid %>%
 
 p_yes_no <- ggplot(data = top_50_EU_yes_no, aes(x = scientific_name, y = presentation, fill = EU_CF)) +
   geom_raster() +
-  scale_fill_discrete(name = "EU-wide CF", labels = c("not available", "available")) +
+  scale_fill_discrete(name = "") +
   #scale_fill_discrete() +
   theme_classic() +
   heat_map_theme +
@@ -301,7 +302,8 @@ print(p_heat_map)
 
 p_yes_no <- ggplot(data = top_50_EU_yes_no, aes(x = scientific_name, y = presentation, fill = EU_CF)) +
   geom_raster() +
-  scale_fill_discrete(name = "EU-wide CF", labels = c("not available", "available")) +
+  #scale_fill_discrete(name = "") +
+  scale_fill_manual(name = "", values = c("#00BFC4", "#F8766D", "gray")) +
   #scale_fill_discrete() +
   theme_classic() +
   heat_map_theme +
@@ -412,3 +414,67 @@ landings_list <- paste(landings_availability$scientific_name, landings_availabil
 no_CF_list <- data.frame(no_CF_list = unique(landings_list[landings_list %in% CF_list == FALSE])) %>%
   separate(col = "no_CF_list", into = c("presentation", "scientific_name"), sep = "_")
 write.csv(no_CF_list, file = file.path(outdir, "species_landed_but_no_CF_value.csv"), quote = FALSE, row.names = FALSE)
+
+############################################################################################################
+# Step 4: Get examples of the extent of the missing CF value problem:
+
+fresh_not_spec <- landings_dat %>% 
+  filter(str_detect(presentation, "Fresh, not specified")) %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+total_landed <- landings_dat %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+fresh_not_spec/total_landed # 10.8% of all landings
+
+frozen_not_spec <- landings_dat %>% 
+  filter(str_detect(presentation, "Frozen, not specified")) %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+frozen_not_spec/total_landed
+
+salted_not_spec <- landings_dat %>% 
+  filter(str_detect(presentation, "Salted, not specified")) %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+salted_not_spec / total_landed
+
+present_unk <- landings_dat %>% 
+  filter(str_detect(presentation, "Presentation unknown")) %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+present_unk / total_landed
+
+dried_whole <- landings_dat %>% 
+  filter(str_detect(presentation, "Dried, whole")) %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+dried_whole / total_landed
+
+dried_gut <- landings_dat %>% 
+  filter(str_detect(presentation, "Dried, gutted and headed")) %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+dried_gut / total_landed
+
+frozen_notfil <- landings_dat %>% 
+  filter(str_detect(presentation, "Frozen, not filleted")) %>% 
+  filter(unit == "Tonnes product weight") %>%
+  pull(value) %>%
+  sum()
+
+frozen_notfil / total_landed

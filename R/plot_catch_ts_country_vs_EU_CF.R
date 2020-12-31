@@ -95,7 +95,8 @@ landings_dat <- landings_dat %>%
   filter(presentation %in% grouped_presentation_forms == FALSE) %>%
   filter(is.na(scientific_name)==FALSE)
 
-#### NOTE - adding NORWAY To this analysis (they have Cod and Hake CF values relevant here)
+#### NOTE - adding NORWAY to this analysis (they have Cod and Hake CF values relevant here)
+#### NOTE - no GBR here but it's fine since this time series is country by country, not EU-wide
 eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
               "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "NOR",
               "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")

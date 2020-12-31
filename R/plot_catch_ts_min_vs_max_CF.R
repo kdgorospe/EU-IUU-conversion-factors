@@ -81,9 +81,9 @@ landings_dat <- landings_dat %>%
   filter(is.na(scientific_name)==FALSE)
 
 
-#### NOTE - adding NORWAY To this analysis (they have Cod and Hake CF values relevant here)
+#### NOTE - adding GBR back into this analysis since they did not leave the EU until recently
 eu_codes <- c("AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
-              "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
+              "DEU", "GBR", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
               "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE")
 
 # Do this loop for all species %in% cod, hake, monkfish:
